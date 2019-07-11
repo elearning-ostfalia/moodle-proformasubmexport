@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file defines the setting form for the quiz downloadsubmissions report.
+ * This file defines the setting form for the quiz proformasubmexport report.
  *
- * @package   quiz_downloadsubmissions
+ * @package   quiz_proformasubmexport
  * @copyright 2017 IIT Bombay
  * @author    Kashmira Nagwekar
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 
 /**
- * Quiz downloadsubmissions report settings form.
+ * Quiz proformasubmexport report settings form.
  *
  * @copyright 2017 IIT Bombay
  * @author    Kashmira Nagwekar
@@ -36,7 +36,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/formslib.php");
 
-class quiz_downloadsubmissions_settings_form extends moodleform {
+class quiz_proformasubmexport_settings_form extends moodleform {
 
     /**
      * Form definition method.
@@ -58,7 +58,7 @@ class quiz_downloadsubmissions_settings_form extends moodleform {
 		        'Set preferences');
 
 		$mform->addElement('select', 'folders', 'Set folder hierarchy', array(
-		        'questionwise'    => 'Essay question wise',
+		        'questionwise'    => 'Question wise',
 		        'attemptwise'     => 'User attempt wise',
 		));
 
@@ -75,7 +75,7 @@ class quiz_downloadsubmissions_settings_form extends moodleform {
 		        '0'   => 'No',
 		));
 
-// 		$mform->addElement('submit', 'downloadsubmissions', get_string('downloadsubmissions', 'quiz_downloadsubmissions'));
-		$mform->addElement('submit', 'downloadsubmissions', 'Download');
+// 		$mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
+		$mform->addElement('submit', 'proformasubmexport', 'Download');
 	}
 }

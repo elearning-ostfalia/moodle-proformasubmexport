@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Quiz downloadsubmissions report version information.
+ * Quiz proformasubmexport report version information.
  *
- * @package   quiz_downloadsubmissions
+ * @package   quiz_proformasubmexport
  * @copyright 2017 IIT Bombay
  * @author    Kashmira Nagwekar
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,9 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2018070500;
+$plugin->version   = 2019071100;
 $plugin->requires  = 2017051500;
 $plugin->cron      = 18000;
-$plugin->component = 'quiz_downloadsubmissions';
+$plugin->component = 'quiz_proformasubmexport';
 $plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '1.1';
+$plugin->release   = '0.8.0';

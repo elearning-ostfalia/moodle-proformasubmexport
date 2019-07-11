@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-  <XMLDB PATH="mod/quiz/report/downloadsubmissions/db" VERSION="20170615" COMMENT="XMLDB file for Moodle mod/quiz/report/downloadsubmissions">
+  <XMLDB PATH="mod/quiz/report/proformasubmexport/db" VERSION="20170615" COMMENT="XMLDB file for Moodle mod/quiz/report/proformasubmexport">
     <TABLES>
-      <TABLE NAME="quiz_downloadsubmissions" COMMENT="Default comment for quiz_downloadsubmissions, please edit me">
+      <TABLE NAME="quiz_proformasubmexport" COMMENT="Default comment for quiz_proformasubmexport, please edit me">
         <FIELDS>
           <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
         </FIELDS>

@@ -15,8 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Post-install script for the quiz downloadsubmissions report.
- * @package   quiz_downloadsubmissions
+ * Post-install script for the quiz proformasubmexport report.
+ * @package   quiz_proformasubmexport
  * @copyright 2017 IIT Bmbay
  * @author    Kashmira Nagwekar
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,11 +28,11 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Post-install script
  */
-function xmldb_quiz_downloadsubmissions_install() {
+function xmldb_quiz_proformasubmexport_install() {
     global $DB;
 
     $record = new stdClass();
-    $record->name         = 'downloadsubmissions';
+    $record->name         = 'proformasubmexport';
     $record->displayorder = '5000';
 
     $DB->insert_record('quiz_reports', $record);

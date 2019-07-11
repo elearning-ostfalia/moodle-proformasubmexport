@@ -1,11 +1,11 @@
-# moodle-quiz_downloadsubmissions
+# moodle-quiz_proformasubmexport
 
 #### Moodle Quiz Report Plugin for downloading essay submissions. 
 
 The ‘Download essay submission’ plugin offers users a convenient way by which teachers can download quiz essay attachments submitted by students in response to quiz essay questions.  
 
 #### Installation
-* The plugin folder ‘downloadsubmissions’ is to be added under ‘moodle/mod/quiz/report’ directory.
+* The plugin folder ‘proformasubmexport’ is to be added under ‘moodle/mod/quiz/report’ directory.
 
 #### How to use?
  * Go to a particular quiz.

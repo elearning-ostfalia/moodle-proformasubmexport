@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file defines the quiz downloadsubmissions report class.
+ * This file defines the quiz proformasubmexport report class.
  *
- * @package   quiz_downloadsubmissions
+ * @package   quiz_proformasubmexport
  * @copyright 2017 IIT Bombay
  * @author	  Kashmira Nagwekar
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,40 +27,40 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
-require_once($CFG->dirroot . '/mod/quiz/report/downloadsubmissions/downloadsubmissions_form.php');
+require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
 
 /**
- * Quiz report subclass for the downloadsubmissions report.
+ * Quiz report subclass for the proformasubmexport report.
  *
  * This report allows you to download file attachments submitted
- * by students as a response to quiz essay questions.
+ * by students as a response to quiz proforma questions.
  *
  * @copyright 1999 onwards Martin Dougiamas and others {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_downloadsubmissions_report extends quiz_attempts_report {
+class quiz_proformasubmexport_report extends quiz_attempts_report {
 
 	public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB;
 
-        $mform = new quiz_downloadsubmissions_settings_form();
+        $mform = new quiz_proformasubmexport_settings_form();
 
         // Load the required questions.
         $questions = quiz_report_get_significant_questions($quiz);
 
-        // Check if the quiz contains essay type questions.
-        // Method 1 : Check $questions object for existence essay type questions
-        $hasessayquestions = false;
+        // Check if the quiz contains proforma type questions.
+        // Method 1 : Check $questions object for existence proforma type questions
+        $hasproformaquestions = false;
         if ($questions) {
 	        foreach ($questions as $question) {
-	        	if ($question->qtype == 'essay') {
-	        		$hasessayquestions = true;
+	        	if ($question->qtype == 'proforma') {
+	        		$hasproformaquestions = true;
 	        		break;
 	        	}
 	        }
         }
         // Method 2 : Check {quiz_slots} table
-        // $hasessayquestions = $this->quiz_has_essay_questions($quiz->id);
+        // $hasproformaquestions = $this->quiz_has_proforma_questions($quiz->id);
 
         $hasstudents = false;
         $sql = "SELECT DISTINCT u.id
@@ -79,15 +79,15 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
 
         // Check if downloading file submissions.
         if ($data = $mform->get_data()){
-        	if ($ds_button_clicked = !empty($data->downloadsubmissions)) {
+        	if ($ds_button_clicked = !empty($data->proformasubmexport)) {
         		$user_attempts = $this->get_user_attempts($quiz, $course);
-	        	$downloading_submissions = $this->downloading_submissions($ds_button_clicked, $hasessayquestions, $user_attempts);
+	        	$downloading_submissions = $this->downloading_submissions($ds_button_clicked, $hasproformaquestions, $user_attempts);
 
-	           	// Download file submissions for essay questions.
+	           	// Download file submissions for proforma questions.
 	        	if ($downloading_submissions) {
 	        	    // If no attachments are found then it returns true;
 	        	    // else returns zip folder with attachments submitted by the students.
-	        	    $hassubmissions = $this->download_essay_submissions($quiz, $cm, $course, $user_attempts, $data);
+	        	    $hassubmissions = $this->download_proforma_submissions($quiz, $cm, $course, $user_attempts, $data);
 	        	}
 	        }
         }
@@ -95,7 +95,7 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
         // Start output.
         if (!$downloading_submissions | !$hassubmissions) {
             // Only print headers if not asked to download data.
-            $this->print_header_and_tabs($cm, $course, $quiz, 'downloadsubmissions');
+            $this->print_header_and_tabs($cm, $course, $quiz, 'proformasubmexport');
         }
 
         $currentgroup = null;
@@ -112,35 +112,35 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
         if (!$downloading_submissions | !$hassubmissions) {
         	if ($ds_button_clicked) {
 	        	if (!$hasquestions) {
-	        	    echo $OUTPUT->notification(get_string('noquestions', 'quiz_downloadsubmissions'));
+	        	    echo $OUTPUT->notification(get_string('noquestions', 'quiz_proformasubmexport'));
 	            } else if (!$hasstudents) {
 	                echo $OUTPUT->notification(get_string('nostudentsyet'));
 // 	            } else if ($currentgroup && !$this->hasgroupstudents) {
 // 	                echo $OUTPUT->notification(get_string('nostudentsingroup'));
-	            } else if (!$hasessayquestions) {
-	            	echo $OUTPUT->notification(get_string('noessayquestion', 'quiz_downloadsubmissions'));
+	            } else if (!$hasproformaquestions) {
+	            	echo $OUTPUT->notification(get_string('noproformaquestion', 'quiz_proformasubmexport'));
 	            } else if (!$user_attempts) {
-	            	echo $OUTPUT->notification(get_string('noattempts', 'quiz_downloadsubmissions'));
+	            	echo $OUTPUT->notification(get_string('noattempts', 'quiz_proformasubmexport'));
 	            } else if (!$hassubmissions) {
-	                echo $OUTPUT->notification(get_string('nosubmission', 'quiz_downloadsubmissions'));
+	                echo $OUTPUT->notification(get_string('nosubmission', 'quiz_proformasubmexport'));
 	            }
         	}
 
             // Print the form.
             $formdata = new stdClass;
             $formdata->id = optional_param('id', $quiz->id, PARAM_INT);
-            $formdata->mode = optional_param('mode', 'downloadsubmissions', PARAM_ALPHA);
+            $formdata->mode = optional_param('mode', 'proformasubmexport', PARAM_ALPHA);
             $mform->set_data($formdata);
-            echo '<div class="plugindescription">' . get_string('plugindescription', 'quiz_downloadsubmissions'). '</div>';
+            echo '<div class="plugindescription">' . get_string('plugindescription', 'quiz_proformasubmexport'). '</div>';
             $mform->display();
         }
 
         return true;
     }
 
-    public function downloading_submissions($ds_button_clicked, $hasessayquestions, $user_attempts) {
+    public function downloading_submissions($ds_button_clicked, $hasproformaquestions, $user_attempts) {
     	global $DB;
-    	if ($ds_button_clicked && $hasessayquestions && $user_attempts) {
+    	if ($ds_button_clicked && $hasproformaquestions && $user_attempts) {
     		return true;
     	} else {
     		return false;
@@ -148,10 +148,10 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
     }
 
     /**
-     * Are there any essay type questions in this quiz?
+     * Are there any proforma type questions in this quiz?
      * @param int $quizid the quiz id.
      */
-    public function quiz_has_essay_questions($quizid) {
+    public function quiz_has_proforma_questions($quizid) {
     	global $DB;
 
     	return $DB->record_exists_sql("
@@ -164,7 +164,7 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
               FROM {question} q
               JOIN {quiz_slots} slot ON slot.questionid = q.id
 
-             WHERE q.qtype = 'essay'
+             WHERE q.qtype = 'proforma'
 
           ORDER BY slot.slot", array($quiz->id));
     }
@@ -215,15 +215,15 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
     }
 
     /**
-     * Download a zip file containing quiz essay submissions.
+     * Download a zip file containing quiz proforma submissions.
      *
      * @param object $quiz
      * @param cm $cm
      * @param course $course
-     * @param array $student_attempts Array of student's attempts to download essay submissions in a zip file
+     * @param array $student_attempts Array of student's attempts to download proforma submissions in a zip file
      * @return string - If an error occurs, this will contain the error notification.
      */
-    protected function download_essay_submissions($quiz, $cm, $course, $student_attempts, $data = null) {
+    protected function download_proforma_submissions($quiz, $cm, $course, $student_attempts, $data = null) {
     	global $CFG;
 
     	// More efficient to load this here.
@@ -267,7 +267,7 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
     		$qa = $quba->get_question_attempt($student->slot);
     		$quba_contextid = $quba->get_owning_context()->id;
 
-    		if ($qa->get_question()->get_type_name() == 'essay') {
+    		if ($qa->get_question()->get_type_name() == 'proforma') {
     		    $questionname = $qa->get_question()->name;
     		    $prefix1 .= ' - ' . $questionname;
 
@@ -281,7 +281,7 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
         		        $qttextfilename = $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
         		        $qttextfileinfo = array (
         		                'contextid' => $context->id,
-        		                'component' => 'quiz_downloadsubmissions',
+        		                'component' => 'quiz_proformasubmexport',
         		                'filearea'  => 'content',
         		                'itemid'    => 0,
         		                'filepath'  => '/',
@@ -317,7 +317,7 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
         		        $textfilename = $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
         		        $textfileinfo = array (
         		                'contextid' => $context->id,
-        		                'component' => 'quiz_downloadsubmissions',
+        		                'component' => 'quiz_proformasubmexport',
         		                'filearea'  => 'content',
         		                'itemid'    => 0,
         		                'filepath'  => '/',
@@ -439,7 +439,7 @@ class quiz_downloadsubmissions_report extends quiz_attempts_report {
     public function pack_files($filesforzipping) {
     	global $CFG;
     	// Create path for new zip file.
-    	$tempzip = tempnam($CFG->tempdir . '/', 'quiz_essay_submissions_');
+    	$tempzip = tempnam($CFG->tempdir . '/', 'quiz_proforma_submissions_');
 
     	// Zip files.
     	$zipper = new zip_packer();

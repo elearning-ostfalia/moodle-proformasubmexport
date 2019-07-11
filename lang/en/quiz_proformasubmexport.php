@@ -15,20 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'quiz_downloadsubmissions', language 'en'
+ * Strings for component 'quiz_proformasubmexport', language 'en'
  *
- * @package   quiz_downloadsubmissions
+ * @package   quiz_proformasubmexport
  * @copyright 2017 IIT Bombay
  * @author    Kashmira Nagwekar
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['downloadsubmissions'] = 'Download essay submissions';
-$string['downloadsubmissionsreport'] = 'Download submissions report';
+$string['proformasubmexport'] = 'Download proforma submissions';
+$string['proformasubmexportreport'] = 'Download submissions report';
 $string['noattempts'] = 'No attempts found.';
-$string['noessayquestion'] = 'Quiz does not contain any essay questions.';
+$string['noproformaquestion'] = 'Quiz does not contain any proforma questions.';
 $string['noquestions'] = 'No questions have been added yet.';
 $string['nosubmission'] = 'No submissions found.';
-$string['pluginname'] = 'Download essay submissions';
-$string['plugindescription'] = 'Download files submitted by all students (all attempts) as attachments in response to quiz essay questions.<br><br>';
-$string['reportdownloadsubmissions'] = 'Download submissions report';
+$string['pluginname'] = 'Download proforma submissions';
+$string['plugindescription'] = 'Download files submitted by all students (all attempts) as attachments in response to quiz proforma questions.<br><br>';
+$string['reportproformasubmexport'] = 'Download submissions report';
