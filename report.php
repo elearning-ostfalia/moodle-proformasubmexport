@@ -151,6 +151,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
      * Are there any proforma type questions in this quiz?
      * @param int $quizid the quiz id.
      */
+/*
     public function quiz_has_proforma_questions($quizid) {
     	global $DB;
 
@@ -168,7 +169,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
           ORDER BY slot.slot", array($quiz->id));
     }
-
+*/
     /**
      *  Get user attempts (quiz attempt alongwith question attempts) : Method 1
      */
@@ -312,7 +313,9 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     		    $textfile = null;
     		    $hastextresponse = false;
     		    if ($data->textresponse == 1) {
-        		    if (!empty($qa->get_response_summary())) {
+                    $answer = $qa->get_last_qt_var('answer');
+                    if (isset($answer)) {
+        		    //if (!empty($qa->get_response_summary())) {
         		        $hastextresponse = true;
         		        $textfilename = $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
         		        $textfileinfo = array (
@@ -330,7 +333,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         		                $textfileinfo['itemid'],
         		                $textfileinfo['filepath'],
         		                $textfileinfo['filename'])) {
-    	                    $fs->create_file_from_string($textfileinfo, $qa->get_response_summary());
+    	                    $fs->create_file_from_string($textfileinfo, $answer); // $qa->get_response_summary());
     	                }
 
     	                $textfile = $fs->get_file(
@@ -359,6 +362,9 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     			if (isset($var_attachments)) {
     			    $has_submitted_attachments = true;
     			}
+
+
+
 
     			// Get files.
     			if ($has_responsefilearea_attachments && $has_submitted_attachments) {
