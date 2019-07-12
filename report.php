@@ -265,14 +265,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
     	// Build a list of files to zip.
     	$filesforzipping = array();
-    	$fs = get_file_storage();
     	$context = context_course::instance($course->id);
-        //$draftid = $this->create_draft_area($context->id);
-
-    	// Construct the zip file name.
-    	$filename = clean_filename($course->fullname . ' - ' .
-    			$quiz->name . ' - ' .
-    			$cm->id . '.zip');
 
     	// Get the file submissions of each student.
     	foreach ($student_attempts as $student) {
@@ -325,7 +318,14 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                     $answer = $qa->get_last_qt_var('answer');
                     if (isset($answer)) {
         		        //$textfilename = '/' . $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
-                        $editortext = $answer->__toString();
+                        if (is_string($answer))
+                            $editortext = $answer;
+                        else if (get_class($answer) == 'question_file_loader')
+                            $editortext = $answer->__toString();
+                        else {
+                            debugging(get_class($answer));
+                            $editortext = $answer;
+                        }
         		    }
     		    }
 
@@ -395,6 +395,10 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     	if (count($filesforzipping) == 0) {
     	    return false;
     	} else if ($zipfile = $this->pack_files($filesforzipping)) {
+            // Construct the zip file name.
+            $filename = clean_filename($course->fullname . ' - ' .
+                    $quiz->name . ' - ' .
+                    $cm->id . '.zip');
     		// Send file and delete after sending.
     		send_temp_file($zipfile, $filename);
     		// We will not get here - send_temp_file calls exit.
