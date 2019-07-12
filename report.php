@@ -362,14 +362,16 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 	    		foreach ($files as $zipfilepath => $file) {
 	    		    $fs_count++;
 	    			$zipfilename = $file->get_filename();
-	    			$pathfilename = $pathprefix . $file->get_filepath() . $prefix3 . 'filesubmission' . '_' . $zipfilename;
+	    			$pathfilename = $pathprefix . $file->get_filepath() . $zipfilename;
+                    // $pathfilename = $pathprefix . $file->get_filepath() . $prefix3 . 'filesubmission' . '_' . $zipfilename;
 	    			$pathfilename = clean_param($pathfilename, PARAM_PATH);
 	    			$filesforzipping[$pathfilename] = $file;
 	    		}
 
 	    		// II. text response strings
 	    		if ($editortext != null) {
-	    		    $pathfilename = $pathprefix . '/' . $prefix3 . 'textresponse';
+	    		    $pathfilename = $pathprefix . '/' . 'editorresponse.txt';
+                    // $pathfilename = $pathprefix . '/' . $prefix3 . 'textresponse';
 	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
 	    		    $filesforzipping[$pathfilename] = array($editortext);
 	    		}
@@ -381,9 +383,9 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     // 	    		    $pathfilename = $pathprefix . $textfile->get_filepath() . $prefix3 . $zipfilename;
 
     	    		    if ($data->folders == 'questionwise') {
-    	    		        $pathfilename = $prefix1 . '/' . 'Question text';
+    	    		        $pathfilename = $prefix1 . '/' . 'questiontext.txt';
     	    		    } else if ($data->folders == 'attemptwise') {
-    	    		        $pathfilename = $pathprefix . '/' . 'Question text';
+    	    		        $pathfilename = $pathprefix . '/' . 'questiontext.txt';
     	    		    }
     	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
     	    		    $filesforzipping[$pathfilename] = array($questiontextfile);
