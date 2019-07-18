@@ -314,7 +314,8 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
     		    // Writing text response to a file.
                 $editortext = null;
-    		    if ($data->textresponse == 1) {
+    		    // if ($data->textresponse == 1) {
+                {
                     $answer = $qa->get_last_qt_var('answer');
                     if (isset($answer)) {
         		        //$textfilename = '/' . $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';

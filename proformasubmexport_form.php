@@ -55,25 +55,39 @@ class quiz_proformasubmexport_settings_form extends moodleform {
 // 		        get_string('reportwhattoinclude', 'quiz'));
 
 		$mform->addElement('header', 'preferencespage',
-		        'Set preferences');
+                get_string('options', 'quiz_proformasubmexport'));
 
-		$mform->addElement('select', 'folders', 'Set folder hierarchy', array(
-		        'questionwise'    => 'Question wise',
-		        'attemptwise'     => 'User attempt wise',
-		));
+		$mform->addElement('select', 'folders',
+                get_string('folderhierarchy', 'quiz_proformasubmexport'), array(
+		        'questionwise'    => get_string('questionwise', 'quiz_proformasubmexport'),
+		        'attemptwise'     => get_string('attemptwise', 'quiz_proformasubmexport'
+		)));
 
 // 		$mform->addElement('selectyesno', 'textresponse',
 // 		        'Include text response');
 
-		$mform->addElement('select', 'textresponse', 'Include text response file', array(
+/*		$mform->addElement('select', 'textresponse',
+                get_string('includetextresponse', 'quiz_proformasubmexport'), array(
 		        '1'   => 'Yes',
 		        '0'   => 'No',
-		));
+		));*/
 
-		$mform->addElement('select', 'questiontext', 'Include question text file', array(
+/*        $mform->addElement('selectyesno', 'textresponse',
+                get_string('includetextresponse', 'quiz_proformasubmexport'),
+                1);
+        $mform->setDefault('textresponse', 1);
+*/
+
+/*		$mform->addElement('select', 'questiontext',
+                get_string('includequestiontext', 'quiz_proformasubmexport'), array(
 		        '1'   => 'Yes',
 		        '0'   => 'No',
-		));
+		));*/
+
+
+        $mform->addElement('selectyesno', 'questiontext',
+                get_string('includequestiontext', 'quiz_proformasubmexport'),
+                0);
 
 // 		$mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
 		$mform->addElement('submit', 'proformasubmexport', 'Download');
