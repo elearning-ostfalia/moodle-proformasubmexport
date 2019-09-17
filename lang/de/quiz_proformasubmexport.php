@@ -40,4 +40,4 @@ $string['questionwise'] = 'Fragen / Studierende(r)';
 $string['attemptwise'] = 'Studierende(r) / Frage';
 $string['includetextresponse'] = 'Textantworten einbeziehen';
 $string['includequestiontext'] = 'Fragetextdatei einbeziehen';
-
+$string['privacy:metadata'] = 'Das Plugin zum Herunterladen von ProFormA-Abgaben speichert keine persönlichen Daten.';

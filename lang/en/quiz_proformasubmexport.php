@@ -23,7 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['proformasubmexport'] = 'Download proforma submissions';
+$string['proformasubmexport'] = 'Download ProFormA submissions';
 $string['proformasubmexportreport'] = 'Download submissions report';
 $string['noattempts'] = 'No attempts found.';
 $string['noproformaquestion'] = 'Quiz does not contain any proforma questions.';
@@ -39,4 +39,5 @@ $string['questionwise'] = 'Question wise';
 $string['attemptwise'] = 'User attempt wise';
 $string['includetextresponse'] = 'Include text response file';
 $string['includequestiontext'] = 'Include question text file';
+$string['privacy:metadata'] = 'The Download ProFormA submissions plugin does not store any personal data.';
 

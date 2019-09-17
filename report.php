@@ -19,7 +19,7 @@
  *
  * @package   quiz_proformasubmexport
  * @copyright 2017 IIT Bombay
- * @author	  Kashmira Nagwekar
+ * @author	  Kashmira Nagwekar, K.Borm (Ostfalia)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
