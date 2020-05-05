@@ -296,7 +296,11 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     		    $questionname = $qa->get_question()->name;
     		    $prefix1 .= ' - ' . $questionname;
 
-    		    $qa->get_question();  // Question object. (Has qt related info like responserequired, attachmentsrequired etc.)
+                // Get response filename set in question
+                $responsefilename = $qa->get_question()->responsefilename;
+                if (empty($responsefilename)) {
+                    $responsefilename = 'unknownfilename.txt';
+                }
 
     		    // Writing question text to a file.
                 $questiontextfile = null;
@@ -371,7 +375,23 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
 	    		// II. text response strings
 	    		if ($editortext != null) {
-	    		    $pathfilename = $pathprefix . '/' . 'editorresponse.txt';
+	    		    switch ($data->editorfilename) {
+                        case 'fix':
+                            $filename = get_string('editorresponsename', 'quiz_proformasubmexport');
+                            break;
+                        case 'pathname':
+                            $filename = $responsefilename;
+                            break;
+                        case 'basename':
+                            $filename = basename($responsefilename);
+                            break;
+                        default:
+                            throw new coding_exception('invalid case for editorfilename');
+                    }
+                    if (empty($filename)) {
+                        throw new coding_exception('editorfilename is not set');
+                    }
+	    		    $pathfilename = $pathprefix . '/' . $filename; // 'editorresponse.txt';
                     // $pathfilename = $pathprefix . '/' . $prefix3 . 'textresponse';
 	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
 	    		    $filesforzipping[$pathfilename] = array($editortext);
