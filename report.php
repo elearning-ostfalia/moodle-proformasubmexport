@@ -54,7 +54,10 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         /*if (!ini_set('memory_limit','1024')) {
             throw new coding_exception('cannot set memory limit');
         }*/
+        $this->mem_info = ' ';
+        $this->max_mem = 0;
 
+        // Create form.
         list($currentgroup, $studentsjoins, $groupstudentsjoins, $allowedjoins) = $this->init('proformasubmexport',
                 'quiz_proformasubmexport_settings_form', $quiz, $cm, $course);
 
@@ -62,17 +65,11 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         if ($fromform = $this->form->get_data()) {
             $options->process_settings_from_form($fromform);
-
         } else {
             $options->process_settings_from_params();
         }
         $this->form->set_data($options->get_initial_form_data());
 
-
-        // $mform = new quiz_proformasubmexport_settings_form();
-
-        $this->mem_info = ' ';
-        $this->max_mem = 0;
 
         // Method 1 : Check $quiz object for existence of proforma type questions.
         $hasproformaquestions = $this->has_quiz_proforma_questions($quiz);
@@ -103,54 +100,28 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                 $this->set_mem('UE');
                 $downloading_submissions = $hasproformaquestions && $user_attempts; // && $ds_button_clicked; which is true at this position
                 $this->set_mem('US');
-
-                // Download file submissions for proforma questions.
-                if ($downloading_submissions) {
-                    // If no attachments are found then it returns true;
-                    // else returns zip folder with attachments submitted by the students.
-                    $hassubmissions = $this->download_proforma_submissions($quiz, $cm, $course, $user_attempts, $data);
-                }
             }
         }
-
-
 
         // Start output.
+        $this->set_mem('END');
+        // echo $this->mem_info;
+
+        // Download file submissions for proforma questions.
+        if ($downloading_submissions) {
+            // If no attachments are found then it returns true;
+            // else returns zip folder with attachments submitted by the students.
+            $hassubmissions = $this->download_proforma_submissions($quiz, $cm, $course, $user_attempts, $data);
+        }
         if (!$downloading_submissions | !$hassubmissions) {
+            $currentgroup = null;
             // Only print headers if not asked to download data.
             $this->print_header_and_tabs($cm, $course, $quiz, 'proformasubmexport');
-        }
+            $this->print_messagees($ds_button_clicked, $cm, $quiz, $OUTPUT, $user_attempts,
+                    $hassubmissions, $currentgroup,
+                    $hasproformaquestions, $hasstudents);
 
-        $this->set_mem('END');
-        echo $this->mem_info;
-
-        $currentgroup = null;
-        // Print information on the number of existing attempts.
-        if (!$downloading_submissions | !$hassubmissions) {
-            // Do not print notices when downloading.
-            if ($strattemptnum = quiz_num_attempt_summary($quiz, $cm, true, $currentgroup)) {
-                echo '<div class="quizattemptcounts">' . $strattemptnum . '</div>';
-            }
-        }
-
-        if (!$downloading_submissions | !$hassubmissions) {
-            if ($ds_button_clicked) {
-                if (!quiz_has_questions($quiz->id)) {
-                    echo $OUTPUT->notification(get_string('noquestions', 'quiz_proformasubmexport'));
-                } else if (!$hasstudents) {
-                    echo $OUTPUT->notification(get_string('nostudentsyet'));
-                    // 	            } else if ($currentgroup && !$this->hasgroupstudents) {
-                    // 	                echo $OUTPUT->notification(get_string('nostudentsingroup'));
-                } else if (!$hasproformaquestions) {
-                    echo $OUTPUT->notification(get_string('noproformaquestion', 'quiz_proformasubmexport'));
-                } else if (!$user_attempts) {
-                    echo $OUTPUT->notification(get_string('noattempts', 'quiz_proformasubmexport'));
-                } else if (!$hassubmissions) {
-                    echo $OUTPUT->notification(get_string('nosubmission', 'quiz_proformasubmexport'));
-                }
-            }
-
-            // Print the form.
+            // Print the display options.
             $formdata = new stdClass;
             $formdata->id = optional_param('id', $quiz->id, PARAM_INT);
             $formdata->mode = optional_param('mode', 'proformasubmexport', PARAM_ALPHA);
@@ -161,6 +132,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         return true;
     }
+
 
 
     /**
@@ -451,5 +423,39 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             }
         }
         return $hasproformaquestions;
+    }
+
+    /**
+     * @param bool $ds_button_clicked
+     * @param stdClass $quiz
+     * @param stdClass $OUTPUT
+     * @param mod_quiz_attempts_report_options $user_attempts
+     * @param int $hassubmissions
+     * @param bool $hasproformaquestions
+     * @param bool $hasstudents
+     * @throws coding_exception
+     */
+    protected function print_messagees($ds_button_clicked, $cm, $quiz, $OUTPUT, $user_attempts, $hassubmissions,
+            $currentgroup, bool $hasproformaquestions, bool $hasstudents): void {
+        // Print information on the number of existing attempts.
+        if ($strattemptnum = quiz_num_attempt_summary($quiz, $cm, true, $currentgroup)) {
+            echo '<div class="quizattemptcounts">' . $strattemptnum . '</div>';
+        }
+
+        if ($ds_button_clicked) {
+            if (!quiz_has_questions($quiz->id)) {
+                echo $OUTPUT->notification(get_string('noquestions', 'quiz_proformasubmexport'));
+            } else if (!$hasstudents) {
+                echo $OUTPUT->notification(get_string('nostudentsyet'));
+                // 	            } else if ($currentgroup && !$this->hasgroupstudents) {
+                // 	                echo $OUTPUT->notification(get_string('nostudentsingroup'));
+            } else if (!$hasproformaquestions) {
+                echo $OUTPUT->notification(get_string('noproformaquestion', 'quiz_proformasubmexport'));
+            } else if (!$user_attempts) {
+                echo $OUTPUT->notification(get_string('noattempts', 'quiz_proformasubmexport'));
+            } else if (!$hassubmissions) {
+                echo $OUTPUT->notification(get_string('nosubmission', 'quiz_proformasubmexport'));
+            }
+        }
     }
 }

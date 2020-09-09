@@ -34,7 +34,6 @@ defined('MOODLE_INTERNAL') || die();
  */
 
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_form.php');
-// require_once("$CFG->libdir/formslib.php");
 
 class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_form { // moodleform {
 
