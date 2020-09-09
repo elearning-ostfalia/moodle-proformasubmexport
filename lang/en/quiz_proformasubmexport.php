@@ -33,20 +33,23 @@ $string['pluginname'] = 'Download proforma submissions';
 $string['plugindescription'] = 'Download files/text responses submitted by all students (all attempts) in response to quiz proforma questions.<br><br>';
 $string['reportproformasubmexport'] = 'Download submissions report';
 
-$string['options'] = 'Set preferences';
+$string['options'] = 'Format options';
 
-$string['folderhierarchy'] = 'Set folder hierarchy';
+$string['folderhierarchy'] = 'Folder hierarchy';
 $string['questionwise'] = 'Question wise';
 $string['attemptwise'] = 'User attempt wise';
 
 $string['editorfilename'] = 'Filename used for editor input';
-$string['fix'] = 'fix';
-$string['pathname'] = 'filename set in question (including relative path)';
-$string['basename'] = 'basename set in question (excluding relative path)';
+$string['fix'] = 'Fix';
+$string['pathname'] = 'Filename set in question (including relative path)';
+$string['basename'] = 'Basename set in question (excluding relative path)';
 $string['editorresponsename'] = 'editorresponse.txt';
 
 $string['includetextresponse'] = 'Include text response file';
-$string['includequestiontext'] = 'Include question text file';
+
+$string['questiontext'] = 'Question text';
+$string['include'] = 'Include';
+
 
 $string['privacy:metadata'] = 'The Download ProFormA submissions plugin does not store any personal data.';
 

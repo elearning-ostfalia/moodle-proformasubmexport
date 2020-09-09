@@ -34,7 +34,7 @@ $string['plugindescription'] = 'Herunterladen der letzten Abgaben aller Studiere
 //$string['reportproformasubmexport'] = 'Download submissions report';
 
 
-$string['options'] = 'Optionen';
+$string['options'] = 'Formatoptionen';
 $string['folderhierarchy'] = 'Verzeichnishierarchie';
 $string['questionwise'] = 'Fragen / Studierende(r)';
 $string['attemptwise'] = 'Studierende(r) / Frage';
@@ -45,5 +45,8 @@ $string['pathname'] = 'Dateiname aus Frage (inkl. Pfad)';
 $string['basename'] = 'Dateiname aus Frage (exkl. Pfad)';
 
 $string['includetextresponse'] = 'Textantworten einbeziehen';
-$string['includequestiontext'] = 'Fragetextdatei einbeziehen';
+
+$string['questiontext'] = 'Fragetext';
+$string['include'] = 'einbeziehen (Datei)';
+
 $string['privacy:metadata'] = 'Das Plugin zum Herunterladen von ProFormA-Abgaben speichert keine persönlichen Daten.';

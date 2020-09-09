@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
+require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_options.php');
 
 /**
  * Quiz report subclass for the proformasubmexport report.
@@ -50,11 +51,25 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB;
 
-        if (!ini_set('memory_limit','1024')) {
+        /*if (!ini_set('memory_limit','1024')) {
             throw new coding_exception('cannot set memory limit');
-        }
+        }*/
 
-        $mform = new quiz_proformasubmexport_settings_form();
+        list($currentgroup, $studentsjoins, $groupstudentsjoins, $allowedjoins) = $this->init('proformasubmexport',
+                'quiz_proformasubmexport_settings_form', $quiz, $cm, $course);
+
+        $options = new mod_quiz_attempts_report_options('proformasubmexport', $quiz, $cm, $course);
+
+        if ($fromform = $this->form->get_data()) {
+            $options->process_settings_from_form($fromform);
+
+        } else {
+            $options->process_settings_from_params();
+        }
+        $this->form->set_data($options->get_initial_form_data());
+
+
+        // $mform = new quiz_proformasubmexport_settings_form();
 
         $this->mem_info = ' ';
         $this->max_mem = 0;
@@ -80,7 +95,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         $hassubmissions = false;
 
         // Check if downloading file submissions.
-        if ($data = $mform->get_data()) {
+        if ($data = $this->form->get_data()) {
             $ds_button_clicked = !empty($data->proformasubmexport);
             if ($ds_button_clicked) {
                 $this->set_mem('US');
@@ -139,9 +154,9 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             $formdata = new stdClass;
             $formdata->id = optional_param('id', $quiz->id, PARAM_INT);
             $formdata->mode = optional_param('mode', 'proformasubmexport', PARAM_ALPHA);
-            $mform->set_data($formdata);
+            $this->form->set_data($formdata);
             echo '<div class="plugindescription">' . get_string('plugindescription', 'quiz_proformasubmexport') . '</div>';
-            $mform->display();
+            $this->form->display();
         }
 
         return true;
@@ -246,10 +261,11 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         // Get the file submissions of each attempt.
         foreach ($student_attempts as $attempt) {
-            // Get question attempt and question context id.
+            // Get question attempt data.
             $quba = $dm->load_questions_usage_by_activity($attempt->qubaid);
             $qa = $quba->get_question_attempt($attempt->slot);
-            if ($qa->get_question()->get_type_name() != 'proforma') {
+            $question = $qa->get_question();
+            if ($question->get_type_name() != 'proforma') {
                 // This is not a ProFormA question => skip.
                 continue;
             }
@@ -273,11 +289,11 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             // echo 'QUBAID = ' . $attempt->qubaid . PHP_EOL;
             $quba_contextid = $quba->get_owning_context()->id;
 
-            $questionname = $qa->get_question()->name;
+            $questionname = $question->name;
             $prefix1 .= ' - ' . $questionname;
 
             // Get response filename set in question
-            $responsefilename = $qa->get_question()->responsefilename;
+            $responsefilename = $question->responsefilename;
             if (empty($responsefilename)) {
                 $responsefilename = 'unknownfilename.txt';
             }
@@ -307,7 +323,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             $name = 'attachments';
 
             // Check if attachments are allowed as response.
-            $response_file_areas = $qa->get_question()->qtype->response_file_areas();
+            $response_file_areas = $question->qtype->response_file_areas();
             $has_responsefilearea_attachments = in_array($name, $response_file_areas);
 
             // Check if attempt has submitted any attachment.
@@ -386,7 +402,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                     $quiz->name . ' - ' .
                     $cm->id . '.zip');
             // Send file and delete after sending.
-            echo $this->mem_info;
+            // echo $this->mem_info;
             send_temp_file($zipfile, $filename);
             // We will not get here - send_temp_file calls exit.
         }

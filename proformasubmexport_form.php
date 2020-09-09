@@ -33,13 +33,55 @@ defined('MOODLE_INTERNAL') || die();
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once("$CFG->libdir/formslib.php");
+require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_form.php');
+// require_once("$CFG->libdir/formslib.php");
 
-class quiz_proformasubmexport_settings_form extends moodleform {
+class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_form { // moodleform {
+
+    protected function definition() {
+        parent::definition();
+        // remove submit button
+        $this->_form->removeElement('submitbutton');
+    }
+
+    protected function standard_preference_fields(MoodleQuickForm $mform) {
+        // No page preferences.
+        $mform->addElement('hidden', 'pagesize', get_string('pagesize', 'quiz'));
+        $mform->setType('pagesize', PARAM_INT);
+        $mform->removeElement('preferencesuser');
+    }
+
+    protected function other_preference_fields(MoodleQuickForm $mform) {
+
+        $mform->addElement('header', 'preferencespage',
+                get_string('options', 'quiz_proformasubmexport'));
+
+        $mform->addElement('select', 'folders',
+                get_string('folderhierarchy', 'quiz_proformasubmexport'), array(
+                        'questionwise' => get_string('questionwise', 'quiz_proformasubmexport'),
+                        'attemptwise' => get_string('attemptwise', 'quiz_proformasubmexport'
+                        )));
+
+        $mform->addElement('advcheckbox', 'questiontext',
+                get_string('questiontext', 'quiz_proformasubmexport'),
+                get_string('include', 'quiz_proformasubmexport'));
+
+        $mform->addElement('select', 'editorfilename',
+                get_string('editorfilename', 'quiz_proformasubmexport'), array(
+                        'fix' => get_string('fix', 'quiz_proformasubmexport') . ' (' .
+                                get_string('editorresponsename', 'quiz_proformasubmexport') . ')',
+                        'pathname' => get_string('pathname', 'quiz_proformasubmexport'),
+                        'basename' => get_string('basename', 'quiz_proformasubmexport')
+                ));
+
+        // $mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
+        $mform->addElement('submit', 'proformasubmexport', 'Download');
+    }
 
     /**
      * Form definition method.
      */
+    /*
     public function definition() {
         global $CFG;
 
@@ -62,9 +104,9 @@ class quiz_proformasubmexport_settings_form extends moodleform {
                         'attemptwise' => get_string('attemptwise', 'quiz_proformasubmexport'
                         )));
 
-        $mform->addElement('selectyesno', 'questiontext',
-                get_string('includequestiontext', 'quiz_proformasubmexport'),
-                0);
+        $mform->addElement('advcheckbox', 'questiontext',
+                get_string('questiontext', 'quiz_proformasubmexport'),
+                get_string('include', 'quiz_proformasubmexport'));
 
         $mform->addElement('select', 'editorfilename',
                 get_string('editorfilename', 'quiz_proformasubmexport'), array(
@@ -77,4 +119,5 @@ class quiz_proformasubmexport_settings_form extends moodleform {
         // $mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
         $mform->addElement('submit', 'proformasubmexport', 'Download');
     }
+    */
 }
