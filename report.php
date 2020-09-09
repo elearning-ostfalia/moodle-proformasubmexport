@@ -25,9 +25,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_options.php');
+require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/quiz_proforma_responses_table.php');
+
 
 /**
  * Quiz report subclass for the proformasubmexport report.
@@ -70,6 +73,16 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         }
         $this->form->set_data($options->get_initial_form_data());
 
+        // Load the required questions.
+        $questions = quiz_report_get_significant_questions($quiz);
+
+        // Prepare for downloading, if applicable.
+        $courseshortname = format_string($course->shortname, true,
+                array('context' => context_course::instance($course->id)));
+        $table = new quiz_proforma_responses_table($quiz, $this->context, $this->qmsubselect,
+                $options, $groupstudentsjoins, $studentsjoins, $questions, $options->get_url());
+        $filename = quiz_report_download_filename('proformasubm', // get_string('responsesfilename', 'quiz_responses'),
+                $courseshortname, $quiz->name);
 
         // Method 1 : Check $quiz object for existence of proforma type questions.
         $hasproformaquestions = $this->has_quiz_proforma_questions($quiz);
@@ -111,7 +124,13 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         if ($downloading_submissions) {
             // If no attachments are found then it returns true;
             // else returns zip folder with attachments submitted by the students.
-            $hassubmissions = $this->download_proforma_submissions($quiz, $cm, $course, $user_attempts, $data);
+            $table->is_downloading('zip'//$options->download
+                    , $filename,
+                    $courseshortname . ' ' . format_string($quiz->name, true));
+            if ($table->is_downloading()) {
+                raise_memory_limit(MEMORY_EXTRA);
+            }
+            // $hassubmissions = $this->download_proforma_submissions($quiz, $cm, $course, $user_attempts, $data);
         }
         if (!$downloading_submissions | !$hassubmissions) {
             $currentgroup = null;
