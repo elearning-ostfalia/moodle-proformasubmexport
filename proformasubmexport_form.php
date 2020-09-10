@@ -40,7 +40,7 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
     protected function definition() {
         parent::definition();
         // remove submit button
-        $this->_form->removeElement('submitbutton');
+        // $this->_form->removeElement('submitbutton');
     }
 
     protected function standard_preference_fields(MoodleQuickForm $mform) {
@@ -61,7 +61,7 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
                         'attemptwise' => get_string('attemptwise', 'quiz_proformasubmexport'
                         )));
 
-        $mform->addElement('advcheckbox', 'questiontext',
+        $mform->addElement('advcheckbox', 'qtext',
                 get_string('questiontext', 'quiz_proformasubmexport'),
                 get_string('include', 'quiz_proformasubmexport'));
 

@@ -78,9 +78,9 @@ class dataformat_zip_writer extends \core\dataformat\base {
             echo ",";
         }
 
-        echo 'DAS IST EIN DATENSATZ ';
+        // echo 'DAS IST EIN DATENSATZ ';
         echo $record;
-        // echo json_encode($record, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo json_encode($record, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
         $this->sheetdatadded = true;
     }

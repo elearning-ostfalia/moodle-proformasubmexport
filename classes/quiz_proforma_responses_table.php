@@ -38,7 +38,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/datafo
 
 class quiz_proforma_responses_table extends quiz_attempts_report_table {
 
-    public function __construct($quiz, $context, $qmsubselect, mod_quiz_attempts_report_options $options,
+    public function __construct($quiz, $context, $qmsubselect, quiz_proforma_options $options,
             \core\dml\sql_join $groupstudentsjoins, \core\dml\sql_join $studentsjoins, $questions, $reporturl) {
         parent::__construct('mod-quiz-report-proforma-submission-export', $quiz, $context,
                 $qmsubselect, $options, $groupstudentsjoins, $studentsjoins, $questions, $reporturl);
@@ -63,6 +63,104 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         }
         return $this->exportclass;
     }
+    
+    protected function requires_extra_data() {
+        return true;
+    }
+
+    protected function field_from_extra_data($attempt, $slot, $field) {
+        if (!isset($this->lateststeps[$attempt->usageid][$slot])) {
+            return '-';
+        }
+        $stepdata = $this->lateststeps[$attempt->usageid][$slot];
+
+        if (property_exists($stepdata, $field . 'full')) {
+            $value = $stepdata->{$field . 'full'};
+        } else {
+            $value = $stepdata->$field;
+        }
+        return $value;
+    }
+
+    public function data_col($slot, $field, $attempt) {
+        if ($attempt->usageid == 0) {
+            return '-';
+        }
+
+        $value = $this->field_from_extra_data($attempt, $slot, $field);
+
+        if (is_null($value)) {
+            $summary = '-';
+        } else {
+            $summary = trim($value);
+        }
+
+        if ($this->is_downloading() && $this->is_downloading() != 'html') {
+            return $summary;
+        }
+        $summary = s($summary);
+
+        if ($this->is_downloading() || $field != 'responsesummary') {
+            return $summary;
+        }
+
+        return $this->make_review_link($summary, $attempt, $slot);
+    }
+
+    public function other_cols($colname, $attempt) {
+        if (preg_match('/^question(\d+)$/', $colname, $matches)) {
+            return $this->data_col($matches[1], 'questionsummary', $attempt);
+
+        } else if (preg_match('/^response(\d+)$/', $colname, $matches)) {
+            return $this->data_col($matches[1], 'responsesummary', $attempt);
+
+        } else if (preg_match('/^right(\d+)$/', $colname, $matches)) {
+            return $this->data_col($matches[1], 'rightanswer', $attempt);
+
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns html code for displaying "Download" button if applicable.
+     */
+    /*
+    public function download_buttons() {
+        return '';
+        global $OUTPUT;
+
+        if ($this->is_downloadable() && !$this->is_downloading()) {
+            $label = get_string('downloadas', 'table');
+            $hiddenparams = array();
+            foreach ($this->baseurl->params() as $key => $value) {
+                $hiddenparams[] = array(
+                        'name' => $key,
+                        'value' => $value,
+                );
+            }
+            $data = array(
+                'label' => $label,
+                'base' =>  $this->baseurl->out_omit_querystring(),
+                'name' => 'download',
+                'params' => $hiddenparams,
+                'options' => [[
+                        'name' => 'zip',
+                        'label' => 'zip'
+                ]],
+                'sesskey' => sesskey(),
+                'submit' => get_string('download'),
+            );
+
+            return $OUTPUT->render_from_template('core/dataformat_selector', $data);
+
+//            return $OUTPUT->download_dataformat_selector('KARIN', // get_string('downloadas', 'table'),
+//                    $this->baseurl->out_omit_querystring(), 'download', $this->baseurl->params());
+        } else {
+            return '';
+        }
+
+    }*/
 }
 
 

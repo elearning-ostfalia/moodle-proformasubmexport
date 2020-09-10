@@ -30,6 +30,8 @@ require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_options.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/quiz_proforma_responses_table.php');
+require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_options.php');
+
 
 
 /**
@@ -60,11 +62,11 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         $this->mem_info = ' ';
         $this->max_mem = 0;
 
-        // Create form.
-        list($currentgroup, $studentsjoins, $groupstudentsjoins, $allowedjoins) = $this->init('proformasubmexport',
-                'quiz_proformasubmexport_settings_form', $quiz, $cm, $course);
+        // Initialisation.
+        list($currentgroup, $studentsjoins, $groupstudentsjoins, $allowedjoins) = $this->init(
+            'proformasubmexport', 'quiz_proformasubmexport_settings_form', $quiz, $cm, $course);
 
-        $options = new mod_quiz_attempts_report_options('proformasubmexport', $quiz, $cm, $course);
+        $options = new quiz_proforma_options('proformasubmexport', $quiz, $cm, $course);
 
         if ($fromform = $this->form->get_data()) {
             $options->process_settings_from_form($fromform);
@@ -75,7 +77,13 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         // Load the required questions.
         $questions = quiz_report_get_significant_questions($quiz);
-
+        // Remove non-ProFormA questions.
+/*        foreach ($questions as $question) {
+            if ($question->type != 'proforma') {
+                unset($questions[$question]);
+            }
+        }
+*/
         // Prepare for downloading, if applicable.
         $courseshortname = format_string($course->shortname, true,
                 array('context' => context_course::instance($course->id)));
@@ -84,11 +92,132 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         $filename = quiz_report_download_filename('proformasubm', // get_string('responsesfilename', 'quiz_responses'),
                 $courseshortname, $quiz->name);
 
+        $table->is_downloading($options->download, $filename,
+                $courseshortname . ' ' . format_string($quiz->name, true));
+        if ($table->is_downloading()) {
+            raise_memory_limit(MEMORY_EXTRA);
+        }
+
+        $this->hasgroupstudents = false;
+        if (!empty($groupstudentsjoins->joins)) {
+            $sql = "SELECT DISTINCT u.id
+                      FROM {user} u
+                    $groupstudentsjoins->joins
+                     WHERE $groupstudentsjoins->wheres";
+            $this->hasgroupstudents = $DB->record_exists_sql($sql, $groupstudentsjoins->params);
+        }
+        $hasstudents = false;
+        if (!empty($studentsjoins->joins)) {
+            $sql = "SELECT DISTINCT u.id
+                    FROM {user} u
+                    $studentsjoins->joins
+                    WHERE $studentsjoins->wheres";
+            $hasstudents = $DB->record_exists_sql($sql, $studentsjoins->params);
+        }
+        if ($options->attempts == self::ALL_WITH) {
+            // This option is only available to users who can access all groups in
+            // groups mode, so setting allowed to empty (which means all quiz attempts
+            // are accessible, is not a security problem.
+            $allowedjoins = new \core\dml\sql_join();
+        }
+
+        $this->process_actions($quiz, $cm, $currentgroup, $groupstudentsjoins, $allowedjoins, $options->get_url());
+
+        $hasquestions = quiz_has_questions($quiz->id);
+
+        // Start output.
+        if (!$table->is_downloading()) {
+            // Only print headers if not asked to download data.
+                $this->print_standard_header_and_messages($cm, $course, $quiz,
+                    $options, $currentgroup, $hasquestions, $hasstudents);
+
+            // $this->print_header_and_tabs($cm, $course, $quiz, 'proformasubmexport');
+            /*$this->print_messagees(false, $cm, $quiz, $OUTPUT, $user_attempts,
+                    $hassubmissions, $currentgroup,
+                    $hasproformaquestions, $hasstudents);*/
+
+            // Print the display options.
+            $this->form->display();
+        }
+
+        $hasstudents = $hasstudents && (!$currentgroup || $this->hasgroupstudents);
+        if ($hasquestions && ($hasstudents || $options->attempts == self::ALL_WITH)) {
+
+            $table->setup_sql_queries($allowedjoins);
+
+            if (!$table->is_downloading()) {
+                // Print information on the grading method.
+                if ($strattempthighlight = quiz_report_highlighting_grading_method(
+                        $quiz, $this->qmsubselect, $options->onlygraded)) {
+                    echo '<div class="quizattemptcounts">' . $strattempthighlight . '</div>';
+                }
+            }
+
+            // Define table columns.
+            $columns = array();
+            $headers = array();
+
+            if (!$table->is_downloading() && $options->checkboxcolumn) {
+                $columnname = 'checkbox';
+                $columns[] = $columnname;
+                $headers[] = $table->checkbox_col_header($columnname);
+            }
+
+            $this->add_user_columns($table, $columns, $headers);
+            $this->add_state_column($columns, $headers);
+
+            if ($table->is_downloading()) {
+                $this->add_time_columns($columns, $headers);
+            }
+
+            $this->add_grade_columns($quiz, $options->usercanseegrades, $columns, $headers);
+
+            foreach ($questions as $id => $question) {
+                if ($options->showqtext) {
+                    $columns[] = 'question' . $id;
+                    $headers[] = get_string('questionx', 'question', $question->number);
+                }
+                // if ($options->showresponses) {
+                    $columns[] = 'response' . $id;
+                    $headers[] = get_string('responsex', 'quiz_responses', $question->number);
+                // }
+                /*
+                if ($options->showright) {
+                    $columns[] = 'right' . $id;
+                    $headers[] = get_string('rightanswerx', 'quiz_responses', $question->number);
+                }*/
+            }
+
+            $table->define_columns($columns);
+            $table->define_headers($headers);
+            $table->sortable(true, 'uniqueid');
+
+            // Set up the table.
+            $table->define_baseurl($options->get_url());
+
+            $this->configure_user_columns($table);
+
+            $table->no_sorting('feedbacktext');
+            $table->column_class('sumgrades', 'bold');
+
+            $table->set_attribute('id', 'responses');
+
+            $table->collapsible(true);
+
+            $table->out($options->pagesize, true);
+        }
+
+
+        return true;
+        /// INDIA
+        /// ------------------------------------------------------------------
+        ///
         // Method 1 : Check $quiz object for existence of proforma type questions.
         $hasproformaquestions = $this->has_quiz_proforma_questions($quiz);
         // Method 2 : Check {quiz_slots} table
         // $hasproformaquestions = $this->quiz_has_proforma_questions($quiz->id);
 
+        /*
         $hasstudents = false;
         $sql = "SELECT DISTINCT u.id
                 FROM {user} 			u
@@ -98,15 +227,15 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                 WHERE
                 	1 = 1 AND u.deleted = 0";
         $hasstudents = $DB->record_exists_sql($sql);
+        */
 
         $downloading_submissions = false;
-        $ds_button_clicked = false;
+        $ds_button_clicked = $table->is_downloading();
         $user_attempts = false;
         $hassubmissions = false;
 
         // Check if downloading file submissions.
         if ($data = $this->form->get_data()) {
-            $ds_button_clicked = !empty($data->proformasubmexport);
             if ($ds_button_clicked) {
                 $this->set_mem('US');
                 $user_attempts = $this->get_user_attempts($quiz, $course);
@@ -291,7 +420,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
             // Write question text to a file.
             $questiontextfile = null;
-            if ($data->questiontext == 1 && !empty($qa->get_question_summary())) {
+            if ($data->qtext == 1 && !empty($qa->get_question_summary())) {
                 $qttextfilename = '/' . $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
                 $questiontextfile = $qa->get_question_summary();
             }
