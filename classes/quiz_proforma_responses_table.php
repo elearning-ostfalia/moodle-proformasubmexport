@@ -63,7 +63,16 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         }
         return $this->exportclass;
     }
-    
+
+    public function build_table() {
+        if (!$this->rawdata) {
+            return;
+        }
+
+        $this->strtimeformat = str_replace(',', ' ', get_string('strftimedatetime'));
+        parent::build_table();
+    }
+
     protected function requires_extra_data() {
         return true;
     }
