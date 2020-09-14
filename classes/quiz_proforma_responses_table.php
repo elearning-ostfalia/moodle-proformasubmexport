@@ -35,7 +35,6 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/datafo
  * @copyright  2020 Ostfalia Hochschule fuer angewandte Wissenschaften
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class quiz_proforma_responses_table extends quiz_attempts_report_table {
 
     public function __construct($quiz, $context, $qmsubselect, quiz_proforma_options $options,
@@ -77,6 +76,67 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         return true;
     }
 
+    /** retrieves the student response from editor or file upload
+     * @param $attempt
+     * @param $slot
+     * @return mixed|string
+     * @throws coding_exception
+     */
+    protected function response_value($attempt, $slot) {
+        // TODO: Try and use already fetched data! Do not read once more!
+        // Get question attempt.
+        $dm = new question_engine_data_mapper();
+        $quba = $dm->load_questions_usage_by_activity($attempt->usageid); // qubaid);
+        // nur Zugriff!
+        $qa = $quba->get_question_attempt($slot);
+
+        // Get text from editor.
+        $editortext = ''; // null;
+        $answer = $qa->get_last_qt_var('answer');
+        if (isset($answer)) {
+            if (is_string($answer)) {
+                $editortext = $answer;
+            } else if (get_class($answer) == 'question_file_loader') {
+                $editortext = $answer->__toString();
+            } else {
+                debugging(get_class($answer));
+                $editortext = $answer;
+            }
+        }
+
+        // Get file attachements.
+        $name = 'attachments';
+
+        // Check if attachments are allowed as response.
+        $response_file_areas = $qa->get_question()->qtype->response_file_areas();
+        $has_responsefilearea_attachments = in_array($name, $response_file_areas);
+
+        // Check if attempt has submitted any attachment.
+        $var_attachments = $qa->get_last_qt_var($name);
+        $has_submitted_attachments = (isset($var_attachments));
+
+        // Get files.
+        if ($has_responsefilearea_attachments && $has_submitted_attachments) {
+            $quba_contextid = $quba->get_owning_context()->id;
+            $files = $qa->get_last_qt_files($name, $quba_contextid);
+        } else {
+            $files = array();
+        }
+
+        $fs_count = 0;
+        foreach ($files as $zipfilepath => $file) {
+            $fs_count++;
+            $zipfilename = $file->get_filename();
+            // TODO: kein editortext
+            $editortext .= '(' . $zipfilename . ')';
+            // $pathfilename = $pathprefix . $file->get_filepath() . $zipfilename;
+            // $pathfilename = clean_param($pathfilename, PARAM_PATH);
+            // $filesforzipping[$pathfilename] = $file;
+        }
+
+        return $editortext;
+    }
+
     protected function field_from_extra_data($attempt, $slot, $field) {
         if (!isset($this->lateststeps[$attempt->usageid][$slot])) {
             return '-';
@@ -86,7 +146,13 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         if (property_exists($stepdata, $field . 'full')) {
             $value = $stepdata->{$field . 'full'};
         } else {
-            $value = $stepdata->$field;
+            if ($field == 'response') {
+                // Special handling for response.
+                $value = $this->response_value($attempt, $slot);
+
+            } else {
+                $value = $stepdata->$field;
+            }
         }
         return $value;
     }
@@ -121,7 +187,7 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             return $this->data_col($matches[1], 'questionsummary', $attempt);
 
         } else if (preg_match('/^response(\d+)$/', $colname, $matches)) {
-            return $this->data_col($matches[1], 'responsesummary', $attempt);
+           return $this->data_col($matches[1], 'response', $attempt);
 
         } else if (preg_match('/^right(\d+)$/', $colname, $matches)) {
             return $this->data_col($matches[1], 'rightanswer', $attempt);
