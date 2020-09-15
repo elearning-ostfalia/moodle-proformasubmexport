@@ -77,6 +77,34 @@ class dataformat_zip_writer extends \core\dataformat\base {
         }
     }
 
+    private function archive_stored($ziparch, $archivepath, $file) {
+        if (!$file->archive_file($ziparch, $archivepath)) {
+            return false;
+        }
+
+        if (!$file->is_directory()) {
+            return true;
+        }
+
+        // Create directory????
+        $baselength = strlen($file->get_filepath());
+        $fs = get_file_storage();
+        $files = $fs->get_directory_files($file->get_contextid(), $file->get_component(), $file->get_filearea(), $file->get_itemid(),
+                $file->get_filepath(), true, true);
+        foreach ($files as $file) {
+            $path = $file->get_filepath();
+            $path = substr($path, $baselength);
+            $path = $archivepath.'/'.$path;
+            if (!$file->is_directory()) {
+                $path = $path.$file->get_filename();
+            }
+            // Ignore result here, partial zipping is ok for now.
+            $file->archive_file($ziparch, $path);
+        }
+
+        return true;
+    }
+
     /**
      * Write a single record
      *
@@ -91,21 +119,22 @@ class dataformat_zip_writer extends \core\dataformat\base {
                 $end = true;
                 break;
             }
+            // Preset values.
+            $editortext = null;
+            $files = null;
+            // Response value will be an array with editor response or file list.
             $file = $record[$this->columns['response' . $q]];
+            if (!empty ($file[0])) {
+                $editortext = $file[0];
+            } else {
+                $files = $file[1];
+            }
+
             $archivepath = 'Q' . $q. '-'. $record[$this->columns['question' . $q]] . '/'. $record[$this->columns['lastname']] . '-' .
                     $record[$this->columns['firstname']] . '-R' . $rownum;
             $archivepath = trim($archivepath, '/') . '/';
 
-            // Create folder.
-            if (!$this->ziparch->add_directory($archivepath)) {
-                debugging("Can not zip '$archivepath' directory", DEBUG_DEVELOPER);
-                if (!$this->ignoreinvalidfiles) {
-                    $this->abort = true;
-                }
-            }
-            $this->sheetdatadded = true;
-
-            if (is_null($file)) {
+            /* if (is_null($file)) {
                 // Directories have null as content.
                 if (!$this->ziparch->add_directory($archivepath.'/')) {
                     debugging("Can not zip '$archivepath' directory", DEBUG_DEVELOPER);
@@ -113,25 +142,35 @@ class dataformat_zip_writer extends \core\dataformat\base {
                         $this->abort = true;
                     }
                 }
-            } else if (is_string($file)) {
+            } else */
+            if (is_string($editortext)) {
                 // Editor content.
                 $archivepath = $archivepath . $this->responsefilename;
-                $content = $file;
+                $content = $editortext;
                 if (!$this->ziparch->add_file_from_string($archivepath, $content)) {
                     debugging("Can not zip '$archivepath' file", DEBUG_DEVELOPER);
                     if (!$this->ignoreinvalidfiles) {
                         $this->abort = true;
                     }
                 }
-                /*
-            } else {
-                if (!$this->archive_stored($ziparch, $archivepath, $file, $progress)) {
-                    debugging("Can not zip '$archivepath' file", DEBUG_DEVELOPER);
-                    if (!$this->ignoreinvalidfiles) {
-                        $this->abort = true;
+                $this->sheetdatadded = true;
+            } else if (is_array($files)) {
+                // Files.
+                $fs_count = 0;
+                foreach ($files as $zipfilepath => $storedfile) {
+                    $fs_count++;
+                    $filename = $storedfile->get_filename();
+                    if (!$this->archive_stored($this->ziparch, $archivepath . $filename, $storedfile)) {
+                        debugging("Can not zip '$archivepath' file", DEBUG_DEVELOPER);
+                        if (!$this->ignoreinvalidfiles) {
+                            $this->abort = true;
+                        }
                     }
+                    // $pathfilename = $pathprefix . $storedfile->get_filepath() . $zipfilename;
+                    // $pathfilename = clean_param($pathfilename, PARAM_PATH);
+                    // $filesforzipping[$pathfilename] = $storedfile;
+                    $this->sheetdatadded = true;
                 }
-                                */
             }
             $q++;
         }

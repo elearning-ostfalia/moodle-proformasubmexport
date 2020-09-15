@@ -131,13 +131,13 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             $fs_count++;
             $zipfilename = $file->get_filename();
             // TODO: kein editortext
-            $editortext .= '(' . $zipfilename . ')';
+            // $editortext .= '(' . $zipfilename . ')';
             // $pathfilename = $pathprefix . $file->get_filepath() . $zipfilename;
             // $pathfilename = clean_param($pathfilename, PARAM_PATH);
             // $filesforzipping[$pathfilename] = $file;
         }
 
-        return $editortext;
+        return array ($editortext, $files);
     }
 
     protected function field_from_extra_data($attempt, $slot, $field) {
@@ -151,8 +151,7 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         } else {
             if ($field == 'response') {
                 // Special handling for response.
-                $value = $this->response_value($attempt, $slot);
-
+                return $this->response_value($attempt, $slot);
             } else {
                 $value = $stepdata->$field;
             }
@@ -165,7 +164,24 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             return '-';
         }
 
-        $value = $this->field_from_extra_data($attempt, $slot, $field);
+        if ($field == 'response') {
+            list ($editortext,  $files) = $this->field_from_extra_data($attempt, $slot, $field);
+            if ($this->is_downloading()) {
+                return array($editortext,  $files);
+            } else {
+                if (empty($editortext)) {
+                    return '(files)';
+                } else {
+                    if (strlen($editortext) > 300) {
+                        return substr($editortext, 0, 300) . '...';
+                    } else {
+                        return $editortext;
+                    }
+                }
+            }
+        } else {
+            $value = $this->field_from_extra_data($attempt, $slot, $field);
+        }
 
         if (is_null($value)) {
             $summary = '-';
