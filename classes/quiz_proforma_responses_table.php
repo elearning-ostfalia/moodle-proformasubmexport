@@ -69,6 +69,9 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         }
 
         $this->strtimeformat = str_replace(',', ' ', get_string('strftimedatetime'));
+        if (isset($this->exportclass)) {
+            $this->exportclass->set_db_columns($this->columns);
+        }
         parent::build_table();
     }
 
@@ -265,5 +268,9 @@ class table_zip_export_format extends table_dataformat_export_format {
 
         // Close the session so that the users other tabs in the same session are not blocked.
         \core\session\manager::write_close();
+    }
+
+    public function set_db_columns($columns) {
+        $this->dataformat->set_columns($columns);
     }
 }

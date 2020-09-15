@@ -34,37 +34,47 @@ defined('MOODLE_INTERNAL') || die();
 class dataformat_zip_writer extends \core\dataformat\base {
 
     /** @var $mimetype */
-    public $mimetype = "text/plain"; // "application/zip";
+    public $mimetype = "application/zip";
 
     /** @var $extension */
-    public $extension = ".txt";
-
-    /** @var $sheetstarted */
-    public $sheetstarted = false;
+    public $extension = ".zip";
 
     /** @var $sheetdatadded */
     public $sheetdatadded = false;
+
+    /** @var string response filename  */
+    protected $responsefilename = 'editorresponse.txt';
+
+    /** @var $zipper zip_archive object  */
+    protected $ziparch = null;
+
+    protected $ignoreinvalidfiles = true;
+    protected $abort = false;
+    /** @var null database column names */
+    protected $columns = null;
+
+    public function __construct() {
+        $this->ziparch = new zip_archive();
+    }
+
+    /**
+     * store database column names
+     * @param $columns
+     */
+    public function set_columns($columns) {
+        $this->columns = $columns;
+    }
 
     /**
      * Write the start of the file.
      */
     public function start_output() {
-        echo "[";
-    }
-
-    /**
-     * Write the start of the sheet we will be adding data to.
-     *
-     * @param array $columns
-     */
-    public function start_sheet($columns) {
-        if ($this->sheetstarted) {
-            echo ",";
+        if (!$this->ziparch->open($this->filename, file_archive::OVERWRITE)) {
+            debugging("Can not open zip file", DEBUG_DEVELOPER);
+            $this->abort = true;
         } else {
-            $this->sheetstarted = true;
+            $this->abort = false;
         }
-        $this->sheetdatadded = false;
-        echo "[";
     }
 
     /**
@@ -74,30 +84,75 @@ class dataformat_zip_writer extends \core\dataformat\base {
      * @param int $rownum
      */
     public function write_record($record, $rownum) {
-        if ($this->sheetdatadded) {
-            echo ",";
+        $q = 1;
+        $end = false;
+        while (!$end) {
+            if (!isset($this->columns['response' . $q])) {
+                $end = true;
+                break;
+            }
+            $file = $record[$this->columns['response' . $q]];
+            $archivepath = 'Q' . $q. '-'. $record[$this->columns['question' . $q]] . '/'. $record[$this->columns['lastname']] . '-' .
+                    $record[$this->columns['firstname']] . '-R' . $rownum;
+            $archivepath = trim($archivepath, '/') . '/';
+
+            // Create folder.
+            if (!$this->ziparch->add_directory($archivepath)) {
+                debugging("Can not zip '$archivepath' directory", DEBUG_DEVELOPER);
+                if (!$this->ignoreinvalidfiles) {
+                    $this->abort = true;
+                }
+            }
+            $this->sheetdatadded = true;
+
+            if (is_null($file)) {
+                // Directories have null as content.
+                if (!$this->ziparch->add_directory($archivepath.'/')) {
+                    debugging("Can not zip '$archivepath' directory", DEBUG_DEVELOPER);
+                    if (!$this->ignoreinvalidfiles) {
+                        $this->abort = true;
+                    }
+                }
+            } else if (is_string($file)) {
+                // Editor content.
+                $archivepath = $archivepath . $this->responsefilename;
+                $content = $file;
+                if (!$this->ziparch->add_file_from_string($archivepath, $content)) {
+                    debugging("Can not zip '$archivepath' file", DEBUG_DEVELOPER);
+                    if (!$this->ignoreinvalidfiles) {
+                        $this->abort = true;
+                    }
+                }
+                /*
+            } else {
+                if (!$this->archive_stored($ziparch, $archivepath, $file, $progress)) {
+                    debugging("Can not zip '$archivepath' file", DEBUG_DEVELOPER);
+                    if (!$this->ignoreinvalidfiles) {
+                        $this->abort = true;
+                    }
+                }
+                                */
+            }
+            $q++;
         }
-
-        // echo 'DAS IST EIN DATENSATZ ';
-        // echo $record;
-        echo json_encode($record, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
-        $this->sheetdatadded = true;
-    }
-
-    /**
-     * Write the end of the sheet containing the data.
-     *
-     * @param array $columns
-     */
-    public function close_sheet($columns) {
-        echo "]";
     }
 
     /**
      * Write the end of the file.
      */
     public function close_output() {
-        echo "]";
+        if (!$this->ziparch->close()) {
+            @unlink($this->filename);
+            return false;
+        }
+
+        if ($this->abort) {
+            @unlink($this->filename);
+            return false;
+        }
+
+        echo readfile($this->filename);
     }
+
+
 }
