@@ -209,147 +209,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
 
         return true;
-        /// INDIA
-        /// ------------------------------------------------------------------
-        ///
-        // Method 1 : Check $quiz object for existence of proforma type questions.
-        $hasproformaquestions = $this->has_quiz_proforma_questions($quiz);
-        // Method 2 : Check {quiz_slots} table
-        // $hasproformaquestions = $this->quiz_has_proforma_questions($quiz->id);
-
-        /*
-        $hasstudents = false;
-        $sql = "SELECT DISTINCT u.id
-                FROM {user} 			u
-                JOIN {user_enrolments} 	ej1_ue 	ON 	ej1_ue.userid 	= u.id
-                JOIN {enrol} 			ej1_e 	ON 	(ej1_e.id 		= ej1_ue.enrolid
-                								AND ej1_e.courseid 	= $course->id)
-                WHERE
-                	1 = 1 AND u.deleted = 0";
-        $hasstudents = $DB->record_exists_sql($sql);
-        */
-
-        $downloading_submissions = false;
-        $ds_button_clicked = $table->is_downloading();
-        $user_attempts = false;
-        $hassubmissions = false;
-
-        // Check if downloading file submissions.
-        if ($data = $this->form->get_data()) {
-            if ($ds_button_clicked) {
-                $this->set_mem('US');
-                $user_attempts = $this->get_user_attempts($quiz, $course);
-                $this->set_mem('UE');
-                $downloading_submissions = $hasproformaquestions && $user_attempts; // && $ds_button_clicked; which is true at this position
-                $this->set_mem('US');
-            }
-        }
-
-        // Start output.
-        $this->set_mem('END');
-        // echo $this->mem_info;
-
-        // Download file submissions for proforma questions.
-        if ($downloading_submissions) {
-            // If no attachments are found then it returns true;
-            // else returns zip folder with attachments submitted by the students.
-            $table->is_downloading('zip'//$options->download
-                    , $filename,
-                    $courseshortname . ' ' . format_string($quiz->name, true));
-            if ($table->is_downloading()) {
-                raise_memory_limit(MEMORY_EXTRA);
-            }
-            // $hassubmissions = $this->download_proforma_submissions($quiz, $cm, $course, $user_attempts, $data);
-        }
-        if (!$downloading_submissions | !$hassubmissions) {
-            $currentgroup = null;
-            // Only print headers if not asked to download data.
-            $this->print_header_and_tabs($cm, $course, $quiz, 'proformasubmexport');
-            $this->print_messagees($ds_button_clicked, $cm, $quiz, $OUTPUT, $user_attempts,
-                    $hassubmissions, $currentgroup,
-                    $hasproformaquestions, $hasstudents);
-
-            // Print the display options.
-            $formdata = new stdClass;
-            $formdata->id = optional_param('id', $quiz->id, PARAM_INT);
-            $formdata->mode = optional_param('mode', 'proformasubmexport', PARAM_ALPHA);
-            $this->form->set_data($formdata);
-            echo '<div class="plugindescription">' . get_string('plugindescription', 'quiz_proformasubmexport') . '</div>';
-            $this->form->display();
-        }
-
-        return true;
-    }
-
-
-
-    /**
-     * Are there any proforma type questions in this quiz?
-     *
-     * @param int $quizid the quiz id.
-     */
-    /*
-        public function quiz_has_proforma_questions($quizid) {
-            global $DB;
-
-            return $DB->record_exists_sql("
-                SELECT slot.slot,
-                       q.id,
-                       q.qtype,
-                       q.length,
-                       slot.maxmark
-
-                  FROM {question} q
-                  JOIN {quiz_slots} slot ON slot.questionid = q.id
-
-                 WHERE q.qtype = 'proforma'
-
-              ORDER BY slot.slot", array($quiz->id));
-        }
-    */
-    /**
-     *  Get user attempts (quiz attempt alongwith question attempts) : Method 1
-     */
-    public function get_user_attempts($quiz, $course) {
-        global $DB;
-
-        $sql = "SELECT DISTINCT CONCAT(u.id, '#', COALESCE(qa.id, 0)) AS uniqueid,
-        				quiza.uniqueid 		AS quizuniqueid,
-        				quiza.id 			AS quizattemptid,
-        				quiza.attempt 		AS userattemptnum,		/*1*/
-        				u.id 				AS userid,
-        				u.username,									/*2*/
-        				u.idnumber, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename, u.firstname, u.lastname,
-        				qa.id 				AS questionattemptid,	/*3*/
-        				qa.questionusageid 	AS qubaid,				/*4*/
-        				qa.slot,									/*5*/
-        				qa.questionid,								/*6*/
-        				quiza.state,
-        				quiza.timefinish,
-        				quiza.timestart,
-				        CASE WHEN quiza.timefinish = 0
-				        		THEN null
-				        	 WHEN quiza.timefinish > quiza.timestart
-				        	 	THEN quiza.timefinish - quiza.timestart
-				        	 ELSE 0
-				        END AS duration
-
-		        FROM		{user} 				u
-		        LEFT JOIN 	{quiz_attempts} 	quiza	ON	quiza.userid 		= u.id
-		        										AND quiza.quiz 			= $quiz->id
-		        JOIN 		{question_attempts} qa 		ON	qa.questionusageid	= quiza.uniqueid		/*7*/
-		       /* JOIN 		{user_enrolments} 	ej1_ue 	ON	ej1_ue.userid 		= u.id
-		        JOIN 		{enrol} 			ej1_e 	ON	(ej1_e.id 			= ej1_ue.enrolid
-														AND ej1_e.courseid 		= $course->id) */
-
-		        WHERE
-		        	quiza.preview = 0
-		        	AND quiza.id IS NOT NULL
-		        	AND 1 = 1
-		        	AND u.deleted = 0";
-        $user_attempts = $DB->get_records_sql($sql);
-
-        return $user_attempts;
     }
 
     /**
@@ -361,6 +220,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
      * @param array $student_attempts Array of student's attempts to download proforma submissions in a zip file
      * @return string - If an error occurs, this will contain the error notification.
      */
+    /*
     protected function download_proforma_submissions($quiz, $cm, $course, $student_attempts, $data) {
         global $CFG;
 
@@ -529,50 +389,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         return true;
     }
-
-    /**
-     * Generate zip file from array of given files.
-     *
-     * @param array $filesforzipping - array of files to pass into archive_to_pathname.
-     *                                 This array is indexed by the final file name and each
-     *                                 element in the array is an instance of a stored_file object.
-     * @return path of temp file - note this returned file does
-     *         not have a .zip extension - it is a temp file.
-     */
-    public function pack_files($filesforzipping) {
-        global $CFG;
-        // Create path for new zip file.
-        $tempzip = tempnam($CFG->tempdir . '/', 'quiz_proforma_submissions_');
-
-        // Zip files.
-        $zipper = new zip_packer();
-        if ($zipper->archive_to_pathname($filesforzipping, $tempzip)) {
-            return $tempzip;
-        }
-        return false;
-    }
-
-    /**
-     * returns true if the quiz object has proforma questions
-     * @param $quiz
-     * @return bool
-     */
-    private function has_quiz_proforma_questions($quiz): bool {
-        $questions = quiz_report_get_significant_questions($quiz);
-
-        // Check if the quiz contains proforma type questions.
-        $hasproformaquestions = false;
-        if ($questions) {
-            foreach ($questions as $question) {
-                if ($question->qtype == 'proforma') {
-                    $hasproformaquestions = true;
-                    break;
-                }
-            }
-        }
-        return $hasproformaquestions;
-    }
-
+*/
     /**
      * @param bool $ds_button_clicked
      * @param stdClass $quiz

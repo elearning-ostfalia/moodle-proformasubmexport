@@ -134,15 +134,6 @@ class dataformat_zip_writer extends \core\dataformat\base {
                     $record[$this->columns['firstname']] . '-R' . $rownum;
             $archivepath = trim($archivepath, '/') . '/';
 
-            /* if (is_null($file)) {
-                // Directories have null as content.
-                if (!$this->ziparch->add_directory($archivepath.'/')) {
-                    debugging("Can not zip '$archivepath' directory", DEBUG_DEVELOPER);
-                    if (!$this->ignoreinvalidfiles) {
-                        $this->abort = true;
-                    }
-                }
-            } else */
             if (is_string($editortext)) {
                 // Editor content.
                 $archivepath = $archivepath . $this->responsefilename;
@@ -192,6 +183,4 @@ class dataformat_zip_writer extends \core\dataformat\base {
 
         echo readfile($this->filename);
     }
-
-
 }
