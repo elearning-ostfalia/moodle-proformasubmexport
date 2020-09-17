@@ -167,16 +167,23 @@ class dataformat_zip_writer extends \core\dataformat\base {
             $archivepath = trim($archivepath, '/') . '/';
 
             if (is_string($editortext)) {
+                $responsefile = $this->responsefilename;
                 // Editor content.
                 switch ($options->editorfilename) {
                     case quiz_proforma_options::FIXED_NAME:
-                        $archivepath = $archivepath . $this->responsefilename;
+                        $archivepath = $archivepath . $responsefile;
                         break;
                     case quiz_proforma_options::NAME_FROM_QUESTION_WITH_PATH:
                     case quiz_proforma_options::NAME_FROM_QUESTION_WO_PATH:
                         $questions = $this->table->get_questions();
                         $question = $questions[$q];
-                        $archivepath = $archivepath . $this->responsefilename;
+                        if (isset ($question->options) && isset($question->options->responsefilename)) {
+                            $responsefile = $question->options->responsefilename;
+                        }
+                        if ($options->editorfilename == quiz_proforma_options::NAME_FROM_QUESTION_WO_PATH) {
+                            $responsefile = basename($responsefile);
+                        }
+                        $archivepath = $archivepath . $responsefile;
                         break;
                     default:
                         throw new coding_exception('editorfilename option not set');
