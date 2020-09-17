@@ -36,8 +36,24 @@ require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_options.php');
  */
 class quiz_proforma_options extends mod_quiz_attempts_report_options {
 
-    /** @var bool whether to show the question text columns. */
+    /** @var bool whether to show the question text. */
     public $showqtext = false;
+
+    /** @var string question/student in zip file  */
+    const QUESTION_WISE = 1;
+    /** @var string student/question in zip file  */
+    const STUDENT_WISE = 2;
+    /** @var string which folder structure in zip file */
+    public $folders = self::QUESTION_WISE;
+
+    /** @var string system default filename  */
+    const FIXED_NAME = 1;
+    /** @var string responsefilename from question (without path) */
+    const NAME_FROM_QUESTION_WO_PATH  = 2;
+    /** @var string responsefilename from question (with path) */
+    const NAME_FROM_QUESTION_WITH_PATH = 3;
+    /** @var string which filename to use for editor response in zip file */
+    public $editorfilename = self::FIXED_NAME;
 
     /** @var bool which try/tries to show responses from. */
     // public $whichtries = question_attempt::LAST_TRY;
@@ -45,6 +61,8 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
     protected function get_url_params() {
         $params = parent::get_url_params();
         $params['qtext']      = $this->showqtext;
+        $params['folders']      = $this->folders;
+        $params['editorfilename']      = $this->editorfilename;
         /*if (quiz_allows_multiple_tries($this->quiz)) {
             $params['whichtries'] = $this->whichtries;
         }*/
@@ -54,6 +72,8 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
     public function get_initial_form_data() {
         $toform = parent::get_initial_form_data();
         $toform->qtext      = $this->showqtext;
+        $toform->folders    = $this->folders;
+        $toform->editorfilename = $this->editorfilename;
         /*if (quiz_allows_multiple_tries($this->quiz)) {
             $toform->whichtries = $this->whichtries;
         }*/
@@ -64,7 +84,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
     public function setup_from_form_data($fromform) {
         parent::setup_from_form_data($fromform);
 
-        $this->showqtext     = $fromform->qtext;
+        $this->showqtext   = $fromform->qtext;
+        $this->folders     = $fromform->folders;
+        $this->editorfilename = $fromform->editorfilename;
         /*if (quiz_allows_multiple_tries($this->quiz)) {
             $this->whichtries = $fromform->whichtries;
         }*/
@@ -78,7 +100,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
             $this->download   = 'zip';
         }
 
-        $this->showqtext     = optional_param('qtext', $this->showqtext,     PARAM_BOOL);
+        $this->showqtext = optional_param('qtext', $this->showqtext, PARAM_BOOL);
+        $this->folders   = optional_param('folders', $this->folders, PARAM_BOOL);
+        $this->editorfilename = optional_param('editorfilename', $this->editorfilename, PARAM_BOOL);
         /*if (quiz_allows_multiple_tries($this->quiz)) {
             $this->whichtries    = optional_param('whichtries', $this->whichtries, PARAM_ALPHA);
         }*/
@@ -87,7 +111,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
     public function setup_from_user_preferences() {
         parent::setup_from_user_preferences();
 
-        $this->showqtext     = get_user_preferences('quiz_report_responses_qtext', $this->showqtext);
+        $this->showqtext   = get_user_preferences('quiz_report_responses_qtext', $this->showqtext);
+        $this->folders     = get_user_preferences('quiz_report_responses_folders', $this->folders);
+        $this->editorfilename = get_user_preferences('quiz_report_responses_editorfilename', $this->editorfilename);
         /*if (quiz_allows_multiple_tries($this->quiz)) {
             $this->whichtries    = get_user_preferences('quiz_report_responses_which_tries', $this->whichtries);
         }*/
@@ -97,6 +123,8 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
         parent::update_user_preferences();
 
         set_user_preference('quiz_report_responses_qtext', $this->showqtext);
+        set_user_preference('quiz_report_responses_folders', $this->folders);
+        set_user_preference('quiz_report_responses_editorfilename', $this->editorfilename);
         /*if (quiz_allows_multiple_tries($this->quiz)) {
             set_user_preference('quiz_report_responses_which_tries', $this->whichtries);
         }*/

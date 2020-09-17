@@ -34,7 +34,7 @@ $string['plugindescription'] = 'Herunterladen der letzten Abgaben aller Studiere
 //$string['reportproformasubmexport'] = 'Download submissions report';
 
 
-$string['options'] = 'Formatoptionen';
+$string['options'] = 'Download-Formatoptionen';
 $string['folderhierarchy'] = 'Verzeichnishierarchie';
 $string['questionwise'] = 'Fragen / Studierende(r)';
 $string['attemptwise'] = 'Studierende(r) / Frage';

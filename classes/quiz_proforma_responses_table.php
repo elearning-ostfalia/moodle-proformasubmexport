@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_table.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/dataformat_zip_writer.php');
+# require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_options.php');
 
 /**
  * This is a table subclass for downloading the proforma responses.
@@ -36,6 +37,13 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/datafo
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quiz_proforma_responses_table extends quiz_attempts_report_table {
+
+    public function get_options() {
+        return $this->options;
+    }
+    public function get_questions() {
+        return $this->questions;
+    }
 
     public function __construct($quiz, $context, $qmsubselect, quiz_proforma_options $options,
             \core\dml\sql_join $groupstudentsjoins, \core\dml\sql_join $studentsjoins, $questions, $reporturl) {
@@ -71,6 +79,7 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         $this->strtimeformat = str_replace(',', ' ', get_string('strftimedatetime'));
         if (isset($this->exportclass)) {
             $this->exportclass->set_db_columns($this->columns);
+            $this->exportclass->set_table_object($this);
         }
         parent::build_table();
     }
@@ -170,7 +179,11 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
                 return array($editortext,  $files);
             } else {
                 if (empty($editortext)) {
-                    return '(files)';
+                    $output = '';
+                    foreach ($files as $zipfilepath => $storedfile) {
+                        $output .= $storedfile->get_filename() . ' ';
+                    }
+                    return $output;
                 } else {
                     if (strlen($editortext) > 300) {
                         return substr($editortext, 0, 300) . '...';
@@ -268,6 +281,7 @@ class table_zip_export_format extends table_dataformat_export_format {
     public function __construct(&$table, $dataformat) {
         // Prevent we are using csv instead of zip in order to pass the constructor call.
         parent::__construct($table, 'csv');
+        $this->table = $table;
 
         if (ob_get_length()) {
             throw new coding_exception("Output can not be buffered before instantiating table_dataformat_export_format");
@@ -288,5 +302,8 @@ class table_zip_export_format extends table_dataformat_export_format {
 
     public function set_db_columns($columns) {
         $this->dataformat->set_columns($columns);
+    }
+    public function set_table_object($table) { // Must not be named set_table due to name clash.
+        $this->dataformat->set_table($table);
     }
 }

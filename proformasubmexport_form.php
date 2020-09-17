@@ -51,6 +51,9 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
     }
 
     protected function other_preference_fields(MoodleQuickForm $mform) {
+        $mform->addElement('advcheckbox', 'qtext',
+                get_string('questiontext', 'quiz_proformasubmexport'),
+                get_string('include', 'quiz_proformasubmexport'));
 
         $mform->addElement('header', 'preferencespage',
                 get_string('options', 'quiz_proformasubmexport'));
@@ -61,10 +64,6 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
                         'attemptwise' => get_string('attemptwise', 'quiz_proformasubmexport'
                         )));
 
-        $mform->addElement('advcheckbox', 'qtext',
-                get_string('questiontext', 'quiz_proformasubmexport'),
-                get_string('include', 'quiz_proformasubmexport'));
-
         $mform->addElement('select', 'editorfilename',
                 get_string('editorfilename', 'quiz_proformasubmexport'), array(
                         'fix' => get_string('fix', 'quiz_proformasubmexport') . ' (' .
@@ -74,7 +73,7 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
                 ));
 
         // $mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
-        $mform->addElement('submit', 'proformasubmexport', 'Download');
+        // $mform->addElement('submit', 'proformasubmexport', 'Download');
     }
 
     /**

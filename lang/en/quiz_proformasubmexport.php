@@ -33,7 +33,7 @@ $string['pluginname'] = 'Download proforma submissions';
 $string['plugindescription'] = 'Download files/text responses submitted by all students (all attempts) in response to quiz proforma questions.<br><br>';
 $string['reportproformasubmexport'] = 'Download submissions report';
 
-$string['options'] = 'Format options';
+$string['options'] = 'Download format options';
 
 $string['folderhierarchy'] = 'Folder hierarchy';
 $string['questionwise'] = 'Question wise';

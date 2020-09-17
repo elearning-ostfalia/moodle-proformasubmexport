@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_options.php');
+
 /**
  * Zip data format writer for proforma responses
  *
@@ -50,8 +52,12 @@ class dataformat_zip_writer extends \core\dataformat\base {
 
     protected $ignoreinvalidfiles = true;
     protected $abort = false;
+
+
     /** @var null database column names */
     protected $columns = null;
+    /** @var null table object to get data from */
+    protected $table = null;
 
     public function __construct() {
         $this->ziparch = new zip_archive();
@@ -63,6 +69,14 @@ class dataformat_zip_writer extends \core\dataformat\base {
      */
     public function set_columns($columns) {
         $this->columns = $columns;
+    }
+
+    /**
+     * store table object (reference)
+     * @param $table
+     */
+    public function set_table(/*quiz_proforma_responses_table*/ $table) {
+        $this->table = $table;
     }
 
     /**
@@ -136,7 +150,22 @@ class dataformat_zip_writer extends \core\dataformat\base {
 
             if (is_string($editortext)) {
                 // Editor content.
-                $archivepath = $archivepath . $this->responsefilename;
+                if (!isset($this->table)) {
+                    throw new coding_exception('options not set');
+                }
+                switch ($this->table->get_options()->editorfilename) {
+                    case quiz_proforma_options::FIXED_NAME:
+                        $archivepath = $archivepath . $this->responsefilename;
+                        break;
+                    case quiz_proforma_options::NAME_FROM_QUESTION_WITH_PATH:
+                        $archivepath = $archivepath . $this->responsefilename;
+                        break;
+                    case quiz_proforma_options::NAME_FROM_QUESTION_WO_PATH:
+                        $archivepath = $archivepath . $this->responsefilename;
+                        break;
+                    default:
+                        throw new coding_exception('editorfilename option not set');
+                }
                 $content = $editortext;
                 if (!$this->ziparch->add_file_from_string($archivepath, $content)) {
                     debugging("Can not zip '$archivepath' file", DEBUG_DEVELOPER);
