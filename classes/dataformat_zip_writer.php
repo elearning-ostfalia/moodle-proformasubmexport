@@ -143,24 +143,39 @@ class dataformat_zip_writer extends \core\dataformat\base {
             } else {
                 $files = $file[1];
             }
+            if (!isset($this->table)) {
+                throw new coding_exception('table not set');
+            }
+            $options = $this->table->get_options();
+            if (!$options) {
+                throw new coding_exception('options not set');
+            }
 
-            $archivepath = 'Q' . $q. '-'. $record[$this->columns['question' . $q]] . '/'. $record[$this->columns['lastname']] . '-' .
+            $questionname = 'Q' . $q. '-'. $record[$this->columns['question' . $q]];
+            $attemptname = $record[$this->columns['lastname']] . '-' .
                     $record[$this->columns['firstname']] . '-R' . $rownum;
+            switch ($options->folders) {
+                case quiz_proforma_options::QUESTION_WISE:
+                    $archivepath =  $questionname . '/'. $attemptname;
+                    break;
+                case quiz_proforma_options::STUDENT_WISE:
+                    $archivepath = $attemptname . '/' . $questionname;
+                    break;
+                default:
+                    throw new coding_exception('folders option not supported ' . $options->folders);
+            }
             $archivepath = trim($archivepath, '/') . '/';
 
             if (is_string($editortext)) {
                 // Editor content.
-                if (!isset($this->table)) {
-                    throw new coding_exception('options not set');
-                }
-                switch ($this->table->get_options()->editorfilename) {
+                switch ($options->editorfilename) {
                     case quiz_proforma_options::FIXED_NAME:
                         $archivepath = $archivepath . $this->responsefilename;
                         break;
                     case quiz_proforma_options::NAME_FROM_QUESTION_WITH_PATH:
-                        $archivepath = $archivepath . $this->responsefilename;
-                        break;
                     case quiz_proforma_options::NAME_FROM_QUESTION_WO_PATH:
+                        $questions = $this->table->get_questions();
+                        $question = $questions[$q];
                         $archivepath = $archivepath . $this->responsefilename;
                         break;
                     default:

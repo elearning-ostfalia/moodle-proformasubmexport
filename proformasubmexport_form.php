@@ -60,16 +60,16 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
 
         $mform->addElement('select', 'folders',
                 get_string('folderhierarchy', 'quiz_proformasubmexport'), array(
-                        'questionwise' => get_string('questionwise', 'quiz_proformasubmexport'),
-                        'attemptwise' => get_string('attemptwise', 'quiz_proformasubmexport'
+                        '1' => get_string('questionwise', 'quiz_proformasubmexport'),
+                        '2' => get_string('attemptwise', 'quiz_proformasubmexport'
                         )));
 
         $mform->addElement('select', 'editorfilename',
                 get_string('editorfilename', 'quiz_proformasubmexport'), array(
-                        'fix' => get_string('fix', 'quiz_proformasubmexport') . ' (' .
+                        '1' => get_string('fix', 'quiz_proformasubmexport') . ' (' .
                                 get_string('editorresponsename', 'quiz_proformasubmexport') . ')',
-                        'pathname' => get_string('pathname', 'quiz_proformasubmexport'),
-                        'basename' => get_string('basename', 'quiz_proformasubmexport')
+                        '2' => get_string('pathname', 'quiz_proformasubmexport'),
+                        '3' => get_string('basename', 'quiz_proformasubmexport')
                 ));
 
         // $mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
