@@ -87,6 +87,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
         $this->showqtext   = $fromform->qtext;
         $this->folders     = $fromform->folders;
         $this->editorfilename = $fromform->editorfilename;
+        if (isset($fromform->download)) {
+            $this->download = 'zip';
+        }
         /*if (quiz_allows_multiple_tries($this->quiz)) {
             $this->whichtries = $fromform->whichtries;
         }*/
@@ -95,9 +98,13 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
     public function setup_from_params() {
         parent::setup_from_params();
 
-        $download = optional_param('proformasubmexport', $this->download, PARAM_ALPHA);
-        if ($download) {
+        $download = optional_param('download', null, PARAM_ALPHA);
+        $submitbutton = optional_param('$submitbutton', null, PARAM_ALPHA);
+        if (isset($download) && !isset($submitbutton)) {
+            // Force download format to zip.
             $this->download   = 'zip';
+        } else {
+            $this->download = '';
         }
 
         $this->showqtext = optional_param('qtext', $this->showqtext, PARAM_BOOL);

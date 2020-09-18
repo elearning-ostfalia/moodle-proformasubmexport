@@ -18,6 +18,7 @@
  * This file defines the quiz proformasubmexport report class.
  *
  * @package   quiz_proformasubmexport
+ * @copyright 2006 Jean-Michel Vedrine
  * @copyright 2017 IIT Bombay
  * @author      Kashmira Nagwekar, K.Borm (Ostfalia)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -157,13 +158,10 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             $columns = array();
             $headers = array();
 
-            if (!$table->is_downloading() && $options->checkboxcolumn) {
-                $columnname = 'checkbox';
-                $columns[] = $columnname;
-                $headers[] = $table->checkbox_col_header($columnname);
-            }
-
             $this->add_user_columns($table, $columns, $headers);
+            // Remove Email address.
+            // unset($columns[2]);
+            // unset($headers[2]);
             $this->add_state_column($columns, $headers);
 
             if ($table->is_downloading()) {
@@ -173,7 +171,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             $this->add_grade_columns($quiz, $options->usercanseegrades, $columns, $headers);
 
             foreach ($questions as $id => $question) {
-                if ($options->showqtext) {
+                if ($options->showqtext || $table->is_downloading()) {
                     $columns[] = 'question' . $id;
                     $headers[] = get_string('questionx', 'question', $question->number);
                 }
@@ -206,7 +204,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
             $table->out($options->pagesize, true);
         }
-
 
         return true;
     }

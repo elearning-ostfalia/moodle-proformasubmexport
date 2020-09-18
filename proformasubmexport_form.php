@@ -73,7 +73,7 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
                 ));
 
         // $mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
-        // $mform->addElement('submit', 'proformasubmexport', 'Download');
+        // $mform->addElement('submit', 'download', 'Download', array('class' => 'btn-secondary'));
     }
 
     /**

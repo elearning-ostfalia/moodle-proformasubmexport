@@ -18,7 +18,7 @@
  * This file defines the quiz proforma responses table.
  *
  * @package   proformasubmexport
- * @copyright  2020 Ostfalia Hochschule fuer angewandte Wissenschaften
+ * @copyright 2008 Jean-Michel Vedrine, 2020 Ostfalia Hochschule fuer angewandte Wissenschaften
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,7 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_table.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/dataformat_zip_writer.php');
-# require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_options.php');
 
 /**
  * This is a table subclass for downloading the proforma responses.
@@ -230,12 +229,16 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
     }
 
     /**
-     * Returns html code for displaying "Download" button if applicable.
+     * Special version for download button:
+     * only display zip as choice option.
+     * Note that the download button should bee a secondary button (at first you need
+     * to load the report)
+     *
      */
-    /*
     public function download_buttons() {
-        return '';
         global $OUTPUT;
+        //return $OUTPUT->download_dataformat_selector('KARIN', // get_string('downloadas', 'table'),
+        //    $this->baseurl->out_omit_querystring(), 'download', $this->baseurl->params());
 
         if ($this->is_downloadable() && !$this->is_downloading()) {
             $label = get_string('downloadas', 'table');
@@ -261,13 +264,11 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
 
             return $OUTPUT->render_from_template('core/dataformat_selector', $data);
 
-//            return $OUTPUT->download_dataformat_selector('KARIN', // get_string('downloadas', 'table'),
-//                    $this->baseurl->out_omit_querystring(), 'download', $this->baseurl->params());
         } else {
             return '';
         }
+    }
 
-    }*/
 }
 
 
