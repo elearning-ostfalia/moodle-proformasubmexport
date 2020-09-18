@@ -151,7 +151,7 @@ class dataformat_zip_writer extends \core\dataformat\base {
                 throw new coding_exception('options not set');
             }
 
-            $questionname = 'Q' . $q. '-'. $record[$this->columns['question' . $q]];
+            $questionname = 'Q' . $q; // . '-'. $record[$this->columns['question' . $q]];
             $attemptname = $record[$this->columns['lastname']] . '-' .
                     $record[$this->columns['firstname']] . '-R' . $rownum;
             switch ($options->folders) {

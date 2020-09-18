@@ -29,6 +29,8 @@ require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_table.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/dataformat_zip_writer.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/table_zip_export_format.php');
 
+
+
 /**
  * This is a table subclass for downloading the proforma responses.
  * It is a copy of the class quiz_last_responses_table from Jean-Michel Vedrine
@@ -238,20 +240,44 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
      * @throws coding_exception
      */
     protected function response_value($attempt, $slot) {
+        $ANSWER = "answer";
+        $ATTACHMENTS = "attachments";
 
         // TODO: Try and use already fetched data! Do not read once more!
         // Get question attempt.
         $dm = new question_engine_data_mapper();
         $quba = $dm->load_questions_usage_by_activity($attempt->usageid); // qubaid);
         // nur Zugriff!
+        // $quba = $this->lateststeps[$attempt->usageid];
         $qa = $quba->get_question_attempt($slot);
-        // So wird es in abgeleiteter Klasse gemacht:
-        /* $quba = $this->questionusagesbyactivity[$attempt->usageid];
-        $qa = $quba->get_question_attempt($slot);*/
+        // $qa = $this->lateststeps[$attempt->usageid][$slot];
 
-        // Get text from editor.
+        // Preset return values.
+        $files = array();
         $editortext = ''; // null;
-        $answer = $qa->get_last_qt_var('answer');
+        if (isset($attempt->try)) {
+            // We have to check the try data.
+            $submissionsteps = $qa->get_steps_with_submitted_response_iterator();
+            $step = $submissionsteps[$attempt->try];
+            if ($step === null) {
+                return array ($editortext, $files);
+            }
+            $qtdata = $step->get_qt_data();
+            if (isset($qtdata[$ANSWER])) {
+                $answer = $qtdata[$ANSWER];
+            }
+            if (isset($qtdata[$ATTACHMENTS])) {
+                $var_attachments = $qtdata[$ATTACHMENTS];
+                $quba_contextid = $quba->get_owning_context()->id;
+                $files = $step->get_qt_files($ATTACHMENTS, $quba_contextid);
+            }
+        } else {
+            $answer = $qa->get_last_qt_var($ANSWER);
+            $var_attachments = $qa->get_last_qt_var($ATTACHMENTS);
+            $quba_contextid = $quba->get_owning_context()->id;
+            $files = $qa->get_last_qt_files($ATTACHMENTS, $quba_contextid);
+        }
+        // Get text from editor.
         if (isset($answer)) {
             if (is_string($answer)) {
                 $editortext = $answer;
@@ -263,36 +289,24 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             }
         }
 
+        /*
         // Get file attachements.
-        $name = 'attachments';
-
         // Check if attachments are allowed as response.
         $response_file_areas = $qa->get_question()->qtype->response_file_areas();
-        $has_responsefilearea_attachments = in_array($name, $response_file_areas);
+        $has_responsefilearea_attachments = in_array(ATTACHMENTS, $response_file_areas);
 
         // Check if attempt has submitted any attachment.
-        $var_attachments = $qa->get_last_qt_var($name);
         $has_submitted_attachments = (isset($var_attachments));
 
         // Get files.
         if ($has_responsefilearea_attachments && $has_submitted_attachments) {
             $quba_contextid = $quba->get_owning_context()->id;
-            $files = $qa->get_last_qt_files($name, $quba_contextid);
-        } else {
-            $files = array();
+            $files = $qa->get_last_qt_files(ATTACHMENTS, $quba_contextid);
         }
-
-        /*
-        $fs_count = 0;
-        foreach ($files as $zipfilepath => $file) {
-            $fs_count++;
-            $zipfilename = $file->get_filename();
-        } */
+        */
 
         return array ($editortext, $files);
     }
-
-
 
     /**
      * Special version for download button:
