@@ -18,22 +18,21 @@
  * This file defines the setting form for the quiz proformasubmexport report.
  *
  * @package   quiz_proformasubmexport
- * @copyright 2017 IIT Bombay
- * @author    Kashmira Nagwekar
+ * @copyright 2020 Ostfalia, 2008 Jean-Michel Vedrine, 2017 IIT Bombay
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_form.php');
 /**
  * Quiz proformasubmexport report settings form.
  *
- * @copyright 2017 IIT Bombay
- * @author    Kashmira Nagwekar
+ * @copyright 2008 Jean-Michel Vedrine, 2020 Ostfalia, 2017 IIT Bombay
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_form.php');
+
 
 class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_form { // moodleform {
 
@@ -72,50 +71,30 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
                         '3' => get_string('basename', 'quiz_proformasubmexport')
                 ));
 
-        // $mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
-        // $mform->addElement('submit', 'download', 'Download', array('class' => 'btn-secondary'));
+        $mform->disabledIf('qtext', 'attempts', 'eq', quiz_attempts_report::ENROLLED_WITHOUT);
     }
 
-    /**
-     * Form definition method.
-     */
-    /*
-    public function definition() {
-        global $CFG;
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
 
-        $mform = $this->_form;
-        $mform->addElement('hidden', 'id', '');
-        $mform->setType('id', PARAM_INT);
+        if ($data['attempts'] != quiz_attempts_report::ENROLLED_WITHOUT && !(
+                $data['qtext'] /* || $data['resp'] || $data['right'] */ )) {
+            $errors['coloptions'] = get_string('reportmustselectstate', 'quiz');
+        }
 
-        $mform->addElement('hidden', 'mode', '');
-        $mform->setType('mode', PARAM_ALPHA);
-
-        // $mform->addElement('header', 'preferencespage',
-        //   get_string('reportwhattoinclude', 'quiz'));
-
-        $mform->addElement('header', 'preferencespage',
-                get_string('options', 'quiz_proformasubmexport'));
-
-        $mform->addElement('select', 'folders',
-                get_string('folderhierarchy', 'quiz_proformasubmexport'), array(
-                        'questionwise' => get_string('questionwise', 'quiz_proformasubmexport'),
-                        'attemptwise' => get_string('attemptwise', 'quiz_proformasubmexport'
-                        )));
-
-        $mform->addElement('advcheckbox', 'questiontext',
-                get_string('questiontext', 'quiz_proformasubmexport'),
-                get_string('include', 'quiz_proformasubmexport'));
-
-        $mform->addElement('select', 'editorfilename',
-                get_string('editorfilename', 'quiz_proformasubmexport'), array(
-                        'fix' => get_string('fix', 'quiz_proformasubmexport') . ' (' .
-                                get_string('editorresponsename', 'quiz_proformasubmexport') . ')',
-                        'pathname' => get_string('pathname', 'quiz_proformasubmexport'),
-                        'basename' => get_string('basename', 'quiz_proformasubmexport')
-                ));
-
-        // $mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));
-        $mform->addElement('submit', 'proformasubmexport', 'Download');
+        return $errors;
     }
-    */
+
+    protected function other_attempt_fields(MoodleQuickForm $mform) {
+        parent::other_attempt_fields($mform);
+        if (quiz_allows_multiple_tries($this->_customdata['quiz'])) {
+            $mform->addElement('select', 'whichtries', get_string('whichtries', 'question'), array(
+                                           question_attempt::FIRST_TRY    => get_string('firsttry', 'question'),
+                                           question_attempt::LAST_TRY     => get_string('lasttry', 'question'),
+                                           question_attempt::ALL_TRIES    => get_string('alltries', 'question'))
+            );
+            $mform->setDefault('whichtries', question_attempt::LAST_TRY);
+            $mform->disabledIf('whichtries', 'attempts', 'eq', quiz_attempts_report::ENROLLED_WITHOUT);
+        }
+    }
 }

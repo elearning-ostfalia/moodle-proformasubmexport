@@ -41,6 +41,13 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/table_
 class quiz_proforma_responses_table extends quiz_attempts_report_table {
 
     /**
+     * The full question usage object for each try shown in report.
+     *
+     * @var question_usage_by_activity[]
+     */
+    private $questionusagesbyactivity;
+
+    /**
      * Constructor.
      *
      * @param $quiz
@@ -145,7 +152,13 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
      */
     protected function field_from_extra_data($attempt, $slot, $field) {
         if (!isset($this->lateststeps[$attempt->usageid][$slot])) {
-            return '-';
+            // New (proforma): special handling for response column.
+            if ($field == 'response') {
+                // Special handling for response.
+                return array('', array());
+            } else {
+                return '-';
+            }
         }
         $stepdata = $this->lateststeps[$attempt->usageid][$slot];
 
@@ -225,12 +238,16 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
      * @throws coding_exception
      */
     protected function response_value($attempt, $slot) {
+
         // TODO: Try and use already fetched data! Do not read once more!
         // Get question attempt.
         $dm = new question_engine_data_mapper();
         $quba = $dm->load_questions_usage_by_activity($attempt->usageid); // qubaid);
         // nur Zugriff!
         $qa = $quba->get_question_attempt($slot);
+        // So wird es in abgeleiteter Klasse gemacht:
+        /* $quba = $this->questionusagesbyactivity[$attempt->usageid];
+        $qa = $quba->get_question_attempt($slot);*/
 
         // Get text from editor.
         $editortext = ''; // null;
@@ -344,6 +361,30 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         }
         return $this->exportclass;
     }
-    
+
+    /**
+     * prefetch all questian usages in order to save memory
+     *
+     * @throws coding_exception
+     */
+    protected function load_extra_data() {
+        parent::load_extra_data();
+        /*
+        $qubaids = $this->get_qubaids_condition();
+        $dm = new question_engine_data_mapper();
+        $this->questionusagesbyactivity = $dm->load_questions_usages_by_activity($qubaids);
+        */
+    }
+
+    /**
+     * Return the question attempt object.
+     *
+     * @param int $questionusagesid
+     * @param int $slot
+     * @return question_attempt
+     */
+    protected function get_question_attempt($questionusagesid, $slot) {
+        return $this->questionusagesbyactivity[$questionusagesid]->get_question_attempt($slot);
+    }
 }
 

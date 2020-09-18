@@ -18,9 +18,7 @@
  * This file defines the quiz proformasubmexport report class.
  *
  * @package   quiz_proformasubmexport
- * @copyright 2006 Jean-Michel Vedrine
- * @copyright 2017 IIT Bombay
- * @author      Kashmira Nagwekar, K.Borm (Ostfalia)
+ * @copyright 2006 Jean-Michel Vedrine, 2020 Ostfalia, 2017 IIT Bombay(?)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,6 +29,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_options.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_responses_table.php');
+require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_first_or_all_responses_table.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_options.php');
 
 
@@ -88,7 +87,12 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         // Prepare for downloading, if applicable.
         $courseshortname = format_string($course->shortname, true,
                 array('context' => context_course::instance($course->id)));
-        $table = new quiz_proforma_responses_table($quiz, $this->context, $this->qmsubselect,
+        if ($options->whichtries === question_attempt::LAST_TRY) {
+            $tableclassname = 'quiz_proforma_responses_table';
+        } else {
+            $tableclassname = 'quiz_proforma_first_or_all_responses_table';
+        }
+        $table = new $tableclassname($quiz, $this->context, $this->qmsubselect,
                 $options, $groupstudentsjoins, $studentsjoins, $questions, $options->get_url());
         $filename = quiz_report_download_filename('proformasubm', // get_string('responsesfilename', 'quiz_responses'),
                 $courseshortname, $quiz->name);
@@ -131,11 +135,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             // Only print headers if not asked to download data.
                 $this->print_standard_header_and_messages($cm, $course, $quiz,
                     $options, $currentgroup, $hasquestions, $hasstudents);
-
-            // $this->print_header_and_tabs($cm, $course, $quiz, 'proformasubmexport');
-            /*$this->print_messagees(false, $cm, $quiz, $OUTPUT, $user_attempts,
-                    $hassubmissions, $currentgroup,
-                    $hasproformaquestions, $hasstudents);*/
 
             // Print the display options.
             $this->form->display();

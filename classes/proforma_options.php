@@ -56,16 +56,16 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
     public $editorfilename = self::FIXED_NAME;
 
     /** @var bool which try/tries to show responses from. */
-    // public $whichtries = question_attempt::LAST_TRY;
+    public $whichtries = question_attempt::LAST_TRY;
 
     protected function get_url_params() {
         $params = parent::get_url_params();
         $params['qtext']      = $this->showqtext;
         $params['folders']      = $this->folders;
         $params['editorfilename']      = $this->editorfilename;
-        /*if (quiz_allows_multiple_tries($this->quiz)) {
+        if (quiz_allows_multiple_tries($this->quiz)) {
             $params['whichtries'] = $this->whichtries;
-        }*/
+        }
         return $params;
     }
 
@@ -74,9 +74,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
         $toform->qtext      = $this->showqtext;
         $toform->folders    = $this->folders;
         $toform->editorfilename = $this->editorfilename;
-        /*if (quiz_allows_multiple_tries($this->quiz)) {
+        if (quiz_allows_multiple_tries($this->quiz)) {
             $toform->whichtries = $this->whichtries;
-        }*/
+        }
 
         return $toform;
     }
@@ -90,9 +90,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
         if (isset($fromform->download)) {
             $this->download = 'zip';
         }
-        /*if (quiz_allows_multiple_tries($this->quiz)) {
+        if (quiz_allows_multiple_tries($this->quiz)) {
             $this->whichtries = $fromform->whichtries;
-        }*/
+        }
     }
 
     public function setup_from_params() {
@@ -110,9 +110,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
         $this->showqtext = optional_param('qtext', $this->showqtext, PARAM_BOOL);
         $this->folders   = optional_param('folders', $this->folders, PARAM_ALPHANUM);
         $this->editorfilename = optional_param('editorfilename', $this->editorfilename, PARAM_ALPHANUM);
-        /*if (quiz_allows_multiple_tries($this->quiz)) {
+        if (quiz_allows_multiple_tries($this->quiz)) {
             $this->whichtries    = optional_param('whichtries', $this->whichtries, PARAM_ALPHA);
-        }*/
+        }
     }
 
     public function setup_from_user_preferences() {
@@ -121,9 +121,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
         $this->showqtext   = get_user_preferences('quiz_report_proformasubmexport_qtext', $this->showqtext);
         $this->folders     = get_user_preferences('quiz_report_proformasubmexport_folders', $this->folders);
         $this->editorfilename = get_user_preferences('quiz_report_proformasubmexport_editorfilename', $this->editorfilename);
-        /*if (quiz_allows_multiple_tries($this->quiz)) {
+        if (quiz_allows_multiple_tries($this->quiz)) {
             $this->whichtries    = get_user_preferences('quiz_report_proformasubmexport_which_tries', $this->whichtries);
-        }*/
+        }
     }
 
     public function update_user_preferences() {
@@ -132,9 +132,9 @@ class quiz_proforma_options extends mod_quiz_attempts_report_options {
         set_user_preference('quiz_report_proformasubmexport_qtext', $this->showqtext);
         set_user_preference('quiz_report_proformasubmexport_folders', $this->folders);
         set_user_preference('quiz_report_proformasubmexport_editorfilename', $this->editorfilename);
-        /*if (quiz_allows_multiple_tries($this->quiz)) {
+        if (quiz_allows_multiple_tries($this->quiz)) {
             set_user_preference('quiz_report_proformasubmexport_which_tries', $this->whichtries);
-        }*/
+        }
     }
 
     public function resolve_dependencies() {
