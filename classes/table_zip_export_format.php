@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Class table_zip_export_format:
  * table_dataformat_export_format derived class using the custom zip dataformat.

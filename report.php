@@ -30,7 +30,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_options.php');
-require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/quiz_proforma_responses_table.php');
+require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_responses_table.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_options.php');
 
 
