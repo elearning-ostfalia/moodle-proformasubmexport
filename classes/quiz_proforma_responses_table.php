@@ -32,22 +32,34 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/datafo
  * This is a table subclass for downloading the proforma responses.
  *
  * @package   proformasubmexport
- * @copyright  2020 Ostfalia Hochschule fuer angewandte Wissenschaften
+ * @copyright  2008 Jean-Michel Vedrine, 2020 Ostfalia Hochschule fuer angewandte Wissenschaften
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quiz_proforma_responses_table extends quiz_attempts_report_table {
+
+    /**
+     * quiz_proforma_responses_table constructor.
+     *
+     * @param $quiz
+     * @param $context
+     * @param $qmsubselect
+     * @param quiz_proforma_options $options
+     * @param \core\dml\sql_join $groupstudentsjoins
+     * @param \core\dml\sql_join $studentsjoins
+     * @param $questions
+     * @param $reporturl
+     */
+    public function __construct($quiz, $context, $qmsubselect, quiz_proforma_options $options,
+            \core\dml\sql_join $groupstudentsjoins, \core\dml\sql_join $studentsjoins, $questions, $reporturl) {
+        parent::__construct('mod-quiz-report-proforma-submission-export', $quiz, $context,
+                $qmsubselect, $options, $groupstudentsjoins, $studentsjoins, $questions, $reporturl);
+    }
 
     public function get_options() {
         return $this->options;
     }
     public function get_questions() {
         return $this->questions;
-    }
-
-    public function __construct($quiz, $context, $qmsubselect, quiz_proforma_options $options,
-            \core\dml\sql_join $groupstudentsjoins, \core\dml\sql_join $studentsjoins, $questions, $reporturl) {
-        parent::__construct('mod-quiz-report-proforma-submission-export', $quiz, $context,
-                $qmsubselect, $options, $groupstudentsjoins, $studentsjoins, $questions, $reporturl);
     }
 
     /**
@@ -134,16 +146,12 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             $files = array();
         }
 
+        /*
         $fs_count = 0;
         foreach ($files as $zipfilepath => $file) {
             $fs_count++;
             $zipfilename = $file->get_filename();
-            // TODO: kein editortext
-            // $editortext .= '(' . $zipfilename . ')';
-            // $pathfilename = $pathprefix . $file->get_filepath() . $zipfilename;
-            // $pathfilename = clean_param($pathfilename, PARAM_PATH);
-            // $filesforzipping[$pathfilename] = $file;
-        }
+        } */
 
         return array ($editortext, $files);
     }
@@ -268,43 +276,5 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             return '';
         }
     }
-
 }
 
-
-class table_zip_export_format extends table_dataformat_export_format {
-    /**
-     * Constructor
-     *
-     * @param string $table An sql table
-     * @param string $dataformat type of dataformat for export
-     */
-    public function __construct(&$table, $dataformat) {
-        // Prevent we are using csv instead of zip in order to pass the constructor call.
-        parent::__construct($table, 'csv');
-        $this->table = $table;
-
-        if (ob_get_length()) {
-            throw new coding_exception("Output can not be buffered before instantiating table_dataformat_export_format");
-        }
-
-        $classname = 'dataformat_zip_writer';
-        if (!class_exists($classname)) {
-            throw new coding_exception("Unable to locate " . $classname);
-        }
-        $this->dataformat = new $classname;
-
-        // The dataformat export time to first byte could take a while to generate...
-        set_time_limit(0);
-
-        // Close the session so that the users other tabs in the same session are not blocked.
-        \core\session\manager::write_close();
-    }
-
-    public function set_db_columns($columns) {
-        $this->dataformat->set_columns($columns);
-    }
-    public function set_table_object($table) { // Must not be named set_table due to name clash.
-        $this->dataformat->set_table($table);
-    }
-}
