@@ -200,8 +200,10 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             $table->set_attribute('id', 'responses');
 
             $table->collapsible(true);
-
+            $result1 = xdebug_start_trace('xdebugtrace');
+            echo $result1;
             $table->out($options->pagesize, true);
+            $result2 = xdebug_stop_trace();
         }
 
         return true;
