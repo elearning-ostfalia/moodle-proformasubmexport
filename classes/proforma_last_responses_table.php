@@ -40,7 +40,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/table_
  * @copyright  2008 Jean-Michel Vedrine, 2020 Ostfalia Hochschule fuer angewandte Wissenschaften
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_proforma_responses_table extends quiz_attempts_report_table {
+class quiz_proforma_last_responses_table extends quiz_attempts_report_table {
 
     /**
      * The full question usage object for each try shown in report.
@@ -72,6 +72,8 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             return;
         }
 
+        // $result1 = xdebug_start_trace('xdebugtrace_build_table', 2);
+        
         $this->strtimeformat = str_replace(',', ' ', get_string('strftimedatetime'));
         // New (proforma): set references needed by export class.
         if (isset($this->exportclass)) {
@@ -79,6 +81,7 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             $this->exportclass->set_table_object($this);
         }
         parent::build_table();
+        // $result2 = xdebug_stop_trace();
     }
 
     public function col_sumgrades($attempt) {
@@ -233,11 +236,11 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
 
     // New functions.
 
-    /** retrieves the student response from editor or file upload
-     * @param $attempt
-     * @param $slot
-     * @return mixed|string
-     * @throws coding_exception
+    /**
+     * retrieves the student response from editor or file upload 
+     * @param type $attempt
+     * @param type $slot
+     * @return type
      */
     protected function response_value($attempt, $slot) {
         $ANSWER = "answer";
@@ -247,9 +250,12 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
         // Get question attempt.
         $dm = new question_engine_data_mapper();
         $quba = $dm->load_questions_usage_by_activity($attempt->usageid); // qubaid);
+        $quba_contextid = $quba->get_owning_context()->id;
         // nur Zugriff!
         // $quba = $this->lateststeps[$attempt->usageid];
         $qa = $quba->get_question_attempt($slot);
+        unset($quba);
+        
         // $qa = $this->lateststeps[$attempt->usageid][$slot];
 
         // Preset return values.
@@ -268,13 +274,11 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             }
             if (isset($qtdata[$ATTACHMENTS])) {
                 $var_attachments = $qtdata[$ATTACHMENTS];
-                $quba_contextid = $quba->get_owning_context()->id;
                 $files = $step->get_qt_files($ATTACHMENTS, $quba_contextid);
             }
         } else {
             $answer = $qa->get_last_qt_var($ANSWER);
             $var_attachments = $qa->get_last_qt_var($ATTACHMENTS);
-            $quba_contextid = $quba->get_owning_context()->id;
             $files = $qa->get_last_qt_files($ATTACHMENTS, $quba_contextid);
         }
         // Get text from editor.
@@ -304,7 +308,11 @@ class quiz_proforma_responses_table extends quiz_attempts_report_table {
             $files = $qa->get_last_qt_files(ATTACHMENTS, $quba_contextid);
         }
         */
+        
 
+        unset($qa);
+        // Force garbage collector to work because this function allocates a lot of memory.
+        gc_collect_cycles();
         return array ($editortext, $files);
     }
 

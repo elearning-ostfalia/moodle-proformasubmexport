@@ -28,7 +28,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_options.php');
-require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_responses_table.php');
+require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_last_responses_table.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_first_or_all_responses_table.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/proforma_options.php');
 
@@ -37,10 +37,10 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/profor
 /**
  * Quiz report subclass for the proformasubmexport report.
  *
- * This report allows you to download file attachments submitted
+ * This report allows you to download editor responses and file attachments submitted
  * by students as a response to quiz proforma questions.
  *
- * @copyright 1999 onwards Martin Dougiamas and others {@link http://moodle.com}
+ * @copyright 2020 Ostfalia, 1999 onwards Martin Dougiamas and others {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quiz_proformasubmexport_report extends quiz_attempts_report {
@@ -88,7 +88,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         $courseshortname = format_string($course->shortname, true,
                 array('context' => context_course::instance($course->id)));
         if ($options->whichtries === question_attempt::LAST_TRY) {
-            $tableclassname = 'quiz_proforma_responses_table';
+            $tableclassname = 'quiz_proforma_last_responses_table';
         } else {
             $tableclassname = 'quiz_proforma_first_or_all_responses_table';
         }
@@ -130,85 +130,104 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         $hasquestions = quiz_has_questions($quiz->id);
 
+        // We need the garbage collector to run.
+        $gcenabled = gc_enabled();
+        gc_enable();
         // Start output.
-        if (!$table->is_downloading()) {
-            // Only print headers if not asked to download data.
+        try {
+            if (!$table->is_downloading()) {
+                // Only print headers if not asked to download data.
                 $this->print_standard_header_and_messages($cm, $course, $quiz,
                     $options, $currentgroup, $hasquestions, $hasstudents);
 
-            // Print the display options.
-            $this->form->display();
-        }
-
-        $hasstudents = $hasstudents && (!$currentgroup || $this->hasgroupstudents);
-        if ($hasquestions && ($hasstudents || $options->attempts == self::ALL_WITH)) {
-
-            $table->setup_sql_queries($allowedjoins);
-
-            if (!$table->is_downloading()) {
-                // Print information on the grading method.
-                if ($strattempthighlight = quiz_report_highlighting_grading_method(
-                        $quiz, $this->qmsubselect, $options->onlygraded)) {
-                    echo '<div class="quizattemptcounts">' . $strattempthighlight . '</div>';
-                }
+                // Print the display options.
+                $this->form->display();
+            }            
+            $hasstudents = $hasstudents && (!$currentgroup || $this->hasgroupstudents);
+            if ($hasquestions && ($hasstudents || $options->attempts == self::ALL_WITH)) {            
+                $this->create_table($table, $questions, $quiz, $options, $allowedjoins);
             }
-
-            // Define table columns.
-            $columns = array();
-            $headers = array();
-
-            $this->add_user_columns($table, $columns, $headers);
-            // Remove Email address.
-            // unset($columns[2]);
-            // unset($headers[2]);
-            $this->add_state_column($columns, $headers);
-
-            if ($table->is_downloading()) {
-                $this->add_time_columns($columns, $headers);
+        } catch (Exception $ex) {
+        } finally {
+            if (!$gcenabled) {
+                gc_disable();                
             }
-
-            $this->add_grade_columns($quiz, $options->usercanseegrades, $columns, $headers);
-
-            foreach ($questions as $id => $question) {
-                if ($options->showqtext || $table->is_downloading()) {
-                    $columns[] = 'question' . $id;
-                    $headers[] = get_string('questionx', 'question', $question->number);
-                }
-                // if ($options->showresponses) {
-                    $columns[] = 'response' . $id;
-                    $headers[] = get_string('responsex', 'quiz_responses', $question->number);
-                // }
-                /*
-                if ($options->showright) {
-                    $columns[] = 'right' . $id;
-                    $headers[] = get_string('rightanswerx', 'quiz_responses', $question->number);
-                }*/
-            }
-
-            $table->define_columns($columns);
-            $table->define_headers($headers);
-            $table->sortable(true, 'uniqueid');
-
-            // Set up the table.
-            $table->define_baseurl($options->get_url());
-
-            $this->configure_user_columns($table);
-
-            $table->no_sorting('feedbacktext');
-            $table->column_class('sumgrades', 'bold');
-
-            $table->set_attribute('id', 'responses');
-
-            $table->collapsible(true);
-            $result1 = xdebug_start_trace('xdebugtrace');
-            echo $result1;
-            $table->out($options->pagesize, true);
-            $result2 = xdebug_stop_trace();
         }
 
         return true;
     }
 
+    /**
+     * 
+     * @param type $table
+     * @param type $hasstudents
+     * @param type $hasquestions
+     */
+    protected function create_table($table, $questions, $quiz, $options, $allowedjoins) {
+        $table->setup_sql_queries($allowedjoins);
+
+        if (!$table->is_downloading()) {
+            // Print information on the grading method.
+            if ($strattempthighlight = quiz_report_highlighting_grading_method(
+                    $quiz, $this->qmsubselect, $options->onlygraded)) {
+                echo '<div class="quizattemptcounts">' . $strattempthighlight . '</div>';
+            }
+        }
+
+        // Define table columns.
+        $columns = array();
+        $headers = array();
+
+        $this->add_user_columns($table, $columns, $headers);
+        // Remove Email address.
+        // unset($columns[2]);
+        // unset($headers[2]);
+        $this->add_state_column($columns, $headers);
+
+        if ($table->is_downloading()) {
+            $this->add_time_columns($columns, $headers);
+        }
+
+        $this->add_grade_columns($quiz, $options->usercanseegrades, $columns, $headers);
+
+        foreach ($questions as $id => $question) {
+            if ($options->showqtext || $table->is_downloading()) {
+                $columns[] = 'question' . $id;
+                $headers[] = get_string('questionx', 'question', $question->number);
+            }
+            // if ($options->showresponses) {
+                $columns[] = 'response' . $id;
+                $headers[] = get_string('responsex', 'quiz_responses', $question->number);
+            // }
+            /*
+            if ($options->showright) {
+                $columns[] = 'right' . $id;
+                $headers[] = get_string('rightanswerx', 'quiz_responses', $question->number);
+            }*/
+        }
+
+        $table->define_columns($columns);
+        $table->define_headers($headers);
+        $table->sortable(true, 'uniqueid');
+
+        // Set up the table.
+        $table->define_baseurl($options->get_url());
+
+        $this->configure_user_columns($table);
+
+        $table->no_sorting('feedbacktext');
+        $table->column_class('sumgrades', 'bold');
+
+        $table->set_attribute('id', 'responses');
+
+        $table->collapsible(true);           
+        // Start Xdebug trace.
+        // $result1 = xdebug_start_trace('xdebugtrace_out');
+        // echo $result1;
+        $table->out($options->pagesize, true);
+        // $result2 = xdebug_stop_trace();
+    }
+    
     /**
      * Load the questions in this quiz and add some properties to the objects needed in the reports.
      *

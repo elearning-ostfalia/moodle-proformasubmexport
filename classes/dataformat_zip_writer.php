@@ -75,7 +75,7 @@ class dataformat_zip_writer extends \core\dataformat\base {
      * store table object (reference)
      * @param $table
      */
-    public function set_table(/*quiz_proforma_responses_table*/ $table) {
+    public function set_table(/*quiz_proforma_last_responses_table*/ $table) {
         $this->table = $table;
     }
 
