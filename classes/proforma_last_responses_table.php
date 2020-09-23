@@ -30,6 +30,67 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/datafo
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/table_zip_export_format.php');
 
 
+/**
+ * Modified version of question_attempt_steps_with_submitted_response_2_iterator.
+ *
+ * @copyright  modification: 2020 Ostfalia
+ *             original class: 2014 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class question_attempt_steps_with_submitted_response_2_iterator extends question_attempt_steps_with_submitted_response_iterator {
+    /**
+     * checks if there is actual data within this data (no data starting with _).
+     * This is relevant to detect a last step with data without pressing 
+     * the submit button.
+     * 
+     * @param type $qtdata
+     */
+    protected function has_actual_data($qtdata) {
+        foreach ($qtdata as $key => $value) {
+            if ($key[0] != '_') {
+                return true;
+            }            
+        }
+        
+       return false;
+    }
+    
+    /**
+     * Find the step nos  in which a student has submitted a response. Including any step with a response that is saved before
+     * the question attempt finishes.
+     *
+     * Called from constructor, should not be called from elsewhere.
+     *
+     */
+    protected function find_steps_with_submitted_response() {
+        $stepnos = array();
+        $lastsavedstep = null;
+        foreach ($this->qa->get_step_iterator() as $stepno => $step) {
+            if ($this->qa->get_behaviour()->step_has_a_submitted_response($step)) {
+                $stepnos[] = $stepno;
+                $lastsavedstep = null;
+            } else {
+                $qtdata = $step->get_qt_data();
+                // Use different method in order to detect if
+                // we have a last saved step.
+                if ($this->has_actual_data($qtdata)) { // { count($qtdata)) {
+                    $lastsavedstep = $stepno;
+                }
+            }
+        }
+
+        if (!is_null($lastsavedstep)) {
+            $stepnos[] = $lastsavedstep;
+        }
+        if (empty($stepnos)) {
+            $this->stepswithsubmittedresponses = array();
+        } else {
+            // Re-index array so index starts with 1.
+            $this->stepswithsubmittedresponses = array_combine(range(1, count($stepnos)), $stepnos);
+        }
+    }    
+}
+
 
 /**
  * This is a table subclass for downloading the proforma responses.
@@ -105,25 +166,29 @@ class quiz_proforma_last_responses_table extends quiz_attempts_report_table {
             return '-';
         }
 
-        // New (proforma): special handling for response column.
         if ($field == 'response') {
+            // New (proforma): special handling for response column.
             list ($editortext,  $files) = $this->field_from_extra_data($attempt, $slot, $field);
             if ($this->is_downloading()) {
+                // Pass to writer.
                 return array($editortext,  $files);
             } else {
-                if (empty($editortext)) {
-                    $output = '';
+                $output = '';
+                if (isset($files) and count($files) > 0) {
+                    // Display filenames.
+                    $output = '<i>Files: ';
                     foreach ($files as $zipfilepath => $storedfile) {
                         $output .= $storedfile->get_filename() . ' ';
                     }
-                    return $output;
-                } else {
-                    if (strlen($editortext) > 300) {
-                        return substr($editortext, 0, 300) . '...';
-                    } else {
-                        return $editortext;
-                    }
+                    $output .= '</i><br>';
                 }
+                if (strlen($editortext) > 300) {
+                    // If text is long than only show beginning of text.
+                    $output .= substr($editortext, 0, 300) . '...';
+                } else {
+                    $output .= $editortext;
+                }
+                return $output;
             }
         } else {
             $value = $this->field_from_extra_data($attempt, $slot, $field);
@@ -243,8 +308,11 @@ class quiz_proforma_last_responses_table extends quiz_attempts_report_table {
      * @return type
      */
     protected function response_value($attempt, $slot) {
-        $ANSWER = "answer";
-        $ATTACHMENTS = "attachments";
+        // Use array with qt data keys to look for in order
+        // to be able to extend keys in future.
+        // Assume only one key in each array is used per question.
+        $answerkeys = array('answer');
+        $attachmentkeys = array('attachments');
 
         // TODO: Try and use already fetched data! Do not read once more!
         // Get question attempt.
@@ -255,31 +323,39 @@ class quiz_proforma_last_responses_table extends quiz_attempts_report_table {
         // $quba = $this->lateststeps[$attempt->usageid];
         $qa = $quba->get_question_attempt($slot);
         unset($quba);
-        
-        // $qa = $this->lateststeps[$attempt->usageid][$slot];
 
         // Preset return values.
         $files = array();
-        $editortext = ''; // null;
+        $editortext = '';
         if (isset($attempt->try)) {
             // We have to check the try data.
-            $submissionsteps = $qa->get_steps_with_submitted_response_iterator();
+            $submissionsteps = new question_attempt_steps_with_submitted_response_2_iterator($qa);
+            // $submissionsteps = $qa->get_steps_with_submitted_response_iterator();
             $step = $submissionsteps[$attempt->try];
             if ($step === null) {
                 return array ($editortext, $files);
             }
             $qtdata = $step->get_qt_data();
-            if (isset($qtdata[$ANSWER])) {
-                $answer = $qtdata[$ANSWER];
+            foreach($answerkeys as $key) {
+                if (isset($qtdata[$key])) {
+                    $answer = $qtdata[$key];
+                }                
             }
-            if (isset($qtdata[$ATTACHMENTS])) {
-                $var_attachments = $qtdata[$ATTACHMENTS];
-                $files = $step->get_qt_files($ATTACHMENTS, $quba_contextid);
+            foreach($attachmentkeys as $key) {            
+                if (isset($qtdata[$key])) {
+                    $var_attachments = $qtdata[$key];
+                    $files = $step->get_qt_files($key, $quba_contextid);
+                }
             }
         } else {
-            $answer = $qa->get_last_qt_var($ANSWER);
-            $var_attachments = $qa->get_last_qt_var($ATTACHMENTS);
-            $files = $qa->get_last_qt_files($ATTACHMENTS, $quba_contextid);
+            // Only use last try.
+            foreach($answerkeys as $key) {            
+                $answer = $qa->get_last_qt_var($key);
+            }
+            foreach($attachmentkeys as $key) {                
+                $var_attachments = $qa->get_last_qt_var($key);
+                $files = $qa->get_last_qt_files($key, $quba_contextid);
+            }
         }
         // Get text from editor.
         if (isset($answer)) {

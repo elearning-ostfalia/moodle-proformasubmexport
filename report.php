@@ -45,22 +45,8 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/classes/profor
  */
 class quiz_proformasubmexport_report extends quiz_attempts_report {
 
-    private $mem_info;
-    private $max_mem = 0;
-    private function set_mem($text) {
-        if (memory_get_usage() > $this->max_mem)
-            $this->max_mem = memory_get_usage();
-        $this->mem_info .= ' _' . $text . ': ' . $this->max_mem;
-    }
-
     public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB;
-
-        /*if (!ini_set('memory_limit','1024')) {
-            throw new coding_exception('cannot set memory limit');
-        }*/
-        $this->mem_info = ' ';
-        $this->max_mem = 0;
 
         // Initialisation.
         list($currentgroup, $studentsjoins, $groupstudentsjoins, $allowedjoins) = $this->init(

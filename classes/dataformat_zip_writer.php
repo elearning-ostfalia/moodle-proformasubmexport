@@ -41,9 +41,6 @@ class dataformat_zip_writer extends \core\dataformat\base {
     /** @var $extension */
     public $extension = ".zip";
 
-    /** @var $sheetdatadded */
-    public $sheetdatadded = false;
-
     /** @var string response filename  */
     protected $responsefilename = 'editorresponse.txt';
 
@@ -91,6 +88,13 @@ class dataformat_zip_writer extends \core\dataformat\base {
         }
     }
 
+    /**
+     * write stored file to zip archive
+     * @param type $ziparch
+     * @param type $archivepath
+     * @param type $file
+     * @return boolean
+     */
     private function archive_stored($ziparch, $archivepath, $file) {
         if (!$file->archive_file($ziparch, $archivepath)) {
             return false;
@@ -126,7 +130,15 @@ class dataformat_zip_writer extends \core\dataformat\base {
      * @param int $rownum
      */
     public function write_record($record, $rownum) {
-        $q = 1;
+        if (!isset($this->table)) {
+            throw new coding_exception('table not set');
+        }
+        $options = $this->table->get_options();
+        if (!$options) {
+            throw new coding_exception('options not set');
+        }
+            
+        $q = 1; // Question number.
         $end = false;
         while (!$end) {
             if (!isset($this->columns['response' . $q])) {
@@ -134,23 +146,12 @@ class dataformat_zip_writer extends \core\dataformat\base {
                 break;
             }
             // Preset values.
-            $editortext = null;
-            $files = null;
+            // $editortext = null;
+            // $files = null;
             // Response value will be an array with editor response or file list.
-            $file = $record[$this->columns['response' . $q]];
-            if (!empty ($file[0])) {
-                $editortext = $file[0];
-            } else {
-                $files = $file[1];
-            }
-            if (!isset($this->table)) {
-                throw new coding_exception('table not set');
-            }
-            $options = $this->table->get_options();
-            if (!$options) {
-                throw new coding_exception('options not set');
-            }
+            list($editortext, $files) = $record[$this->columns['response' . $q]];
 
+            // Create pathname.
             $questionname = 'Q' . $q; // . '-'. $record[$this->columns['question' . $q]];
             $attemptname = $record[$this->columns['lastname']] . '-' .
                     $record[$this->columns['firstname']] . '-R' . $rownum;
@@ -171,7 +172,7 @@ class dataformat_zip_writer extends \core\dataformat\base {
                 // Editor content.
                 switch ($options->editorfilename) {
                     case quiz_proforma_options::FIXED_NAME:
-                        $archivepath = $archivepath . $responsefile;
+                        $responsefile = $archivepath . $responsefile;
                         break;
                     case quiz_proforma_options::NAME_FROM_QUESTION_WITH_PATH:
                     case quiz_proforma_options::NAME_FROM_QUESTION_WO_PATH:
@@ -183,24 +184,24 @@ class dataformat_zip_writer extends \core\dataformat\base {
                         if ($options->editorfilename == quiz_proforma_options::NAME_FROM_QUESTION_WO_PATH) {
                             $responsefile = basename($responsefile);
                         }
-                        $archivepath = $archivepath . $responsefile;
+                        $responsefile = $archivepath . $responsefile;
                         break;
                     default:
                         throw new coding_exception('editorfilename option not set');
                 }
                 $content = $editortext;
-                if (!$this->ziparch->add_file_from_string($archivepath, $content)) {
-                    debugging("Can not zip '$archivepath' file", DEBUG_DEVELOPER);
+                if (!$this->ziparch->add_file_from_string($responsefile, $content)) {
+                    debugging("Can not zip '$responsefile' file", DEBUG_DEVELOPER);
                     if (!$this->ignoreinvalidfiles) {
                         $this->abort = true;
                     }
                 }
-                $this->sheetdatadded = true;
-            } else if (is_array($files)) {
+            } 
+            if (is_array($files)) {
                 // Files.
-                $fs_count = 0;
+                // $fs_count = 0;
                 foreach ($files as $zipfilepath => $storedfile) {
-                    $fs_count++;
+                    // $fs_count++;
                     $filename = $storedfile->get_filename();
                     if (!$this->archive_stored($this->ziparch, $archivepath . $filename, $storedfile)) {
                         debugging("Can not zip '$archivepath' file", DEBUG_DEVELOPER);
@@ -211,7 +212,6 @@ class dataformat_zip_writer extends \core\dataformat\base {
                     // $pathfilename = $pathprefix . $storedfile->get_filepath() . $zipfilename;
                     // $pathfilename = clean_param($pathfilename, PARAM_PATH);
                     // $filesforzipping[$pathfilename] = $storedfile;
-                    $this->sheetdatadded = true;
                 }
             }
             $q++;
