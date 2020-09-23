@@ -24,14 +24,9 @@
  */
 
 $string['proformasubmexport'] = 'Download ProFormA submissions';
-$string['proformasubmexportreport'] = 'Download submissions report';
-$string['noattempts'] = 'No attempts found.';
-$string['noproformaquestion'] = 'Quiz does not contain any proforma questions.';
-$string['noquestions'] = 'No questions have been added yet.';
-$string['nosubmission'] = 'No submissions found.';
+//$string['proformasubmexportreport'] = 'Download submissions report';
 $string['pluginname'] = 'Download proforma submissions';
 $string['plugindescription'] = 'Download files/text responses submitted by all students (all attempts) in response to quiz proforma questions.<br><br>';
-$string['reportproformasubmexport'] = 'Download submissions report';
 
 $string['options'] = 'Download format options';
 
@@ -39,7 +34,7 @@ $string['folderhierarchy'] = 'Folder hierarchy';
 $string['questionwise'] = 'Question wise';
 $string['attemptwise'] = 'User attempt wise';
 
-$string['editorfilename'] = 'Filename used for editor input';
+$string['editorfilename'] = 'Filename used for editor input (ProFormA)';
 $string['fix'] = 'Fix';
 $string['pathname'] = 'Filename set in question (including relative path)';
 $string['basename'] = 'Basename set in question (excluding relative path)';
@@ -48,7 +43,7 @@ $string['editorresponsename'] = 'editorresponse.txt';
 $string['includetextresponse'] = 'Include text response file';
 
 $string['questiontext'] = 'Question text';
-$string['include'] = 'Include';
+$string['include'] = 'What values to include';
 
 
 $string['privacy:metadata'] = 'The Download ProFormA submissions plugin does not store any personal data.';

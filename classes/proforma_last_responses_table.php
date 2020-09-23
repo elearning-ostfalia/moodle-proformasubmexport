@@ -326,7 +326,7 @@ class quiz_proforma_last_responses_table extends quiz_attempts_report_table {
 
         // Preset return values.
         $files = array();
-        $editortext = '';
+        $editortext = null;
         if (isset($attempt->try)) {
             // We have to check the try data.
             $submissionsteps = new question_attempt_steps_with_submitted_response_2_iterator($qa);

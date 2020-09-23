@@ -18,7 +18,7 @@
  * This file defines the quiz proformasubmexport report class.
  *
  * @package   quiz_proformasubmexport
- * @copyright 2006 Jean-Michel Vedrine, 2020 Ostfalia, 2017 IIT Bombay(?)
+ * @copyright 2006 Jean-Michel Vedrine, 2020 Ostfalia University of Applied sciences
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -63,13 +63,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         // Load the required questions.
         $questions = $this->load_fullquestions($quiz); // quiz_report_get_significant_questions($quiz);
-        // Remove non-ProFormA questions.
-/*        foreach ($questions as $question) {
-            if ($question->type != 'proforma') {
-                unset($questions[$question]);
-            }
-        }
-*/
         // Prepare for downloading, if applicable.
         $courseshortname = format_string($course->shortname, true,
                 array('context' => context_course::instance($course->id)));
@@ -208,10 +201,9 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         $table->collapsible(true);           
         // Start Xdebug trace.
-        // $result1 = xdebug_start_trace('xdebugtrace_out');
-        // echo $result1;
+        // xdebug_start_trace('xdebugtrace_out');
         $table->out($options->pagesize, true);
-        // $result2 = xdebug_stop_trace();
+        // xdebug_stop_trace();
     }
     
     /**
@@ -236,39 +228,5 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             $questions[$qno] = $q;
         }
         return $questions;
-    }
-
-    /**
-     * @param bool $ds_button_clicked
-     * @param stdClass $quiz
-     * @param stdClass $OUTPUT
-     * @param mod_quiz_attempts_report_options $user_attempts
-     * @param int $hassubmissions
-     * @param bool $hasproformaquestions
-     * @param bool $hasstudents
-     * @throws coding_exception
-     */
-    protected function print_messagees($ds_button_clicked, $cm, $quiz, $OUTPUT, $user_attempts, $hassubmissions,
-            $currentgroup, bool $hasproformaquestions, bool $hasstudents): void {
-        // Print information on the number of existing attempts.
-        if ($strattemptnum = quiz_num_attempt_summary($quiz, $cm, true, $currentgroup)) {
-            echo '<div class="quizattemptcounts">' . $strattemptnum . '</div>';
-        }
-
-        if ($ds_button_clicked) {
-            if (!quiz_has_questions($quiz->id)) {
-                echo $OUTPUT->notification(get_string('noquestions', 'quiz_proformasubmexport'));
-            } else if (!$hasstudents) {
-                echo $OUTPUT->notification(get_string('nostudentsyet'));
-                // 	            } else if ($currentgroup && !$this->hasgroupstudents) {
-                // 	                echo $OUTPUT->notification(get_string('nostudentsingroup'));
-            } else if (!$hasproformaquestions) {
-                echo $OUTPUT->notification(get_string('noproformaquestion', 'quiz_proformasubmexport'));
-            } else if (!$user_attempts) {
-                echo $OUTPUT->notification(get_string('noattempts', 'quiz_proformasubmexport'));
-            } else if (!$hassubmissions) {
-                echo $OUTPUT->notification(get_string('nosubmission', 'quiz_proformasubmexport'));
-            }
-        }
     }
 }

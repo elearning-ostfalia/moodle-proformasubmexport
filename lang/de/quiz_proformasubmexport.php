@@ -23,15 +23,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['proformasubmexport'] = 'Herunterladen von ProFormA-Abgaben';
-//$string['proformasubmexportreport'] = 'Download submissions report';
-$string['noattempts'] = 'Keine Abgaben gefunden.';
-$string['noproformaquestion'] = 'Das Quiz enthält keine ProFormA-Fragen.';
-$string['noquestions'] = 'Das Quiz enthält keine Fragen.';
-$string['nosubmission'] = 'Es wurden keine Abgaben gefunden.';
-$string['pluginname'] = ' Herunterladen von ProFormA-Abgaben';
-$string['plugindescription'] = 'Herunterladen der letzten Abgaben aller Studierenden auf ProForma-Fragen innerhalb des Tests (alle Versuche).<br><br>';
-//$string['reportproformasubmexport'] = 'Download submissions report';
+$string['proformasubmexport'] = 'Herunterladen von Text/Datei-Abgaben';
+$string['pluginname'] = ' Herunterladen von Abgaben';
+$string['plugindescription'] = 'Herunterladen der Text/Datei-Abgaben, insbesondere für Freitext- und ProFormA-Aufgabemn.<br><br>';
 
 
 $string['options'] = 'Download-Formatoptionen';
@@ -39,7 +33,7 @@ $string['folderhierarchy'] = 'Verzeichnishierarchie';
 $string['questionwise'] = 'Fragen / Studierende(r)';
 $string['attemptwise'] = 'Studierende(r) / Frage';
 
-$string['editorfilename'] = 'Dateiname bei Eingabe im Editor';
+$string['editorfilename'] = 'Dateiname bei Eingabe im Editor (ProFormA)';
 $string['fix'] = 'fest';
 $string['pathname'] = 'Dateiname aus Frage (inkl. Pfad)';
 $string['basename'] = 'Dateiname aus Frage (exkl. Pfad)';
@@ -47,6 +41,6 @@ $string['basename'] = 'Dateiname aus Frage (exkl. Pfad)';
 $string['includetextresponse'] = 'Textantworten einbeziehen';
 
 $string['questiontext'] = 'Fragetext';
-$string['include'] = 'einbeziehen (Datei)';
+$string['include'] = 'Welche Werte darstellen';
 
 $string['privacy:metadata'] = 'Das Plugin zum Herunterladen von ProFormA-Abgaben speichert keine persönlichen Daten.';

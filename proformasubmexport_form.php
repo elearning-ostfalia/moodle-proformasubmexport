@@ -18,7 +18,8 @@
  * This file defines the setting form for the quiz proformasubmexport report.
  *
  * @package   quiz_proformasubmexport
- * @copyright 2020 Ostfalia, 2008 Jean-Michel Vedrine, 2017 IIT Bombay
+ * @copyright modified: 2020 Ostfalia, 
+ *            base: 2008 Jean-Michel Vedrine
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -34,26 +35,9 @@ require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport_form.php');
 
 
 
-class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_form { // moodleform {
-
-    protected function definition() {
-        parent::definition();
-        // remove submit button
-        // $this->_form->removeElement('submitbutton');
-    }
-
-    protected function standard_preference_fields(MoodleQuickForm $mform) {
-        // No page preferences.
-        $mform->addElement('hidden', 'pagesize', get_string('pagesize', 'quiz'));
-        $mform->setType('pagesize', PARAM_INT);
-        $mform->removeElement('preferencesuser');
-    }
+class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_form {
 
     protected function other_preference_fields(MoodleQuickForm $mform) {
-        $mform->addElement('advcheckbox', 'qtext',
-                get_string('questiontext', 'quiz_proformasubmexport'),
-                get_string('include', 'quiz_proformasubmexport'));
-
         $mform->addElement('header', 'preferencespage',
                 get_string('options', 'quiz_proformasubmexport'));
 
@@ -96,5 +80,8 @@ class quiz_proformasubmexport_settings_form extends mod_quiz_attempts_report_for
             $mform->setDefault('whichtries', question_attempt::LAST_TRY);
             $mform->disabledIf('whichtries', 'attempts', 'eq', quiz_attempts_report::ENROLLED_WITHOUT);
         }
+        $mform->addElement('advcheckbox', 'qtext',
+                get_string('include', 'quiz_proformasubmexport'),
+                get_string('questiontext', 'quiz_proformasubmexport'));        
     }
 }
