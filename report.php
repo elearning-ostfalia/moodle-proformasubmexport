@@ -16,6 +16,9 @@
 
 /**
  * This file defines the quiz proformasubmexport report class.
+ * Support for randomly selected essay questions included 
+ * as suggested by gabriosecco 
+ * (https://github.com/IITBombayWeb/moodle-quiz_downloadsubmissions/issues/2#issuecomment-613266125)
  *
  * @package   quiz_proformasubmexport
  * @copyright 2017 IIT Bombay
@@ -27,37 +30,42 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
+
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
 
 /**
+
  * Quiz report subclass for the proformasubmexport report.
  *
  * This report allows you to download file attachments submitted
+
  * by students as a response to quiz proforma questions.
  *
  * @copyright 1999 onwards Martin Dougiamas and others {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 class quiz_proformasubmexport_report extends quiz_attempts_report {
 
 	public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB;
+
 
         $mform = new quiz_proformasubmexport_settings_form();
 
         // Load the required questions.
         $questions = quiz_report_get_significant_questions($quiz);
 
+
         // Check if the quiz contains proforma type questions.
-        // Method 1 : Check $questions object for existence proforma type questions
+        // Method 1 : Check $questions object for existence of matching question types
         $hasproformaquestions = false;
         if ($questions) {
 	        foreach ($questions as $question) {
-	        	if ($question->qtype == 'proforma') {
+	        	if ($question->qtype == 'proforma' || $question->qtype == 'essay' || $question->qtype == 'random') {
 	        		$hasproformaquestions = true;
 	        		break;
 	        	}
-	        }
         }
         // Method 2 : Check {quiz_slots} table
         // $hasproformaquestions = $this->quiz_has_proforma_questions($quiz->id);
@@ -165,7 +173,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
               FROM {question} q
               JOIN {quiz_slots} slot ON slot.questionid = q.id
 
-             WHERE q.qtype = 'proforma'
+             WHERE q.qtype = 'proforma' or  q.qtype = 'essay'
 
           ORDER BY slot.slot", array($quiz->id));
     }
@@ -292,7 +300,8 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     		$qa = $quba->get_question_attempt($student->slot);
     		$quba_contextid = $quba->get_owning_context()->id;
 
-    		if ($qa->get_question()->get_type_name() == 'proforma') {
+
+    		if ($qa->get_question()->get_type_name() == 'proforma' or $qa->get_question()->get_type_name() == 'essay') {
     		    $questionname = $qa->get_question()->name;
     		    $prefix1 .= ' - ' . $questionname;
 
@@ -307,8 +316,8 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     		    if ($data->questiontext == 1) {
         		    if(!empty($qa->get_question_summary())) {
 //     		        if(!empty($qa->get_question()->questiontext)) {
-        		        $qttextfilename = '/' . $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
-                        $questiontextfile = $qa->get_question_summary();
+// PROFORMA        		        $qttextfilename = '/' . $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
+// PROFORMA                       $questiontextfile = $qa->get_question_summary();
 //                        $questiontextfile = $this->create_file_in_draft_area($context->id, $draftid,
 //                                $qttextfilename . '.text', $qa->get_question_summary());
 
@@ -333,6 +342,12 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                         }
         		    }
     		    }
+
+    		    if (1) { // $data->textresponse == 1) {
+        		    if (isset(editortext)) {
+					}
+				}
+
 
     		    // Fetching attachments.
     			$name = 'attachments';
@@ -374,7 +389,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 	    		}
 
 	    		// II. text response strings
-	    		if ($editortext != null) {
+	    		if (textfile) { // PROFORMA $editortext != null) {
 	    		    switch ($data->editorfilename) {
                         case 'fix':
                             $filename = get_string('editorresponsename', 'quiz_proformasubmexport');
@@ -394,7 +409,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 	    		    $pathfilename = $pathprefix . '/' . $filename; // 'editorresponse.txt';
                     // $pathfilename = $pathprefix . '/' . $prefix3 . 'textresponse';
 	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
-	    		    $filesforzipping[$pathfilename] = array($editortext);
+// PROFORMA	    		    $filesforzipping[$pathfilename] = array($editortext);
 	    		}
 
 	    		// III. question text strings
@@ -409,7 +424,8 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     	    		        $pathfilename = $pathprefix . '/' . 'questiontext.txt';
     	    		    }
     	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
-    	    		    $filesforzipping[$pathfilename] = array($questiontextfile);
+    	    		    $filesforzipping[$pathfilename] = $questiontextfile;
+// PROFORMA    	    		    $filesforzipping[$pathfilename] = array($questiontextfile);
     	    		}
 	    		}
     		}
