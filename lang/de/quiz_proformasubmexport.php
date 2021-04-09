@@ -23,13 +23,13 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['proformasubmexport'] = 'Herunterladen von ProFormA-Abgaben';
+$string['proformasubmexport'] = 'Freitext- und ProFormA-Abgaben herunterladen';
 //$string['proformasubmexportreport'] = 'Download submissions report';
 $string['noattempts'] = 'Keine Abgaben gefunden.';
-$string['noproformaquestion'] = 'Das Quiz enthält keine ProFormA-Fragen.';
+$string['noproformaquestion'] = 'Das Quiz enthält keine Freiext- oder ProFormA-Fragen.';
 $string['noquestions'] = 'Das Quiz enthält keine Fragen.';
 $string['nosubmission'] = 'Es wurden keine Abgaben gefunden.';
-$string['pluginname'] = ' Herunterladen von ProFormA-Abgaben';
+$string['pluginname'] = ' Herunterladen von Freiext- oder ProFormA-Abgaben';
 $string['plugindescription'] = 'Herunterladen der letzten Abgaben aller Studierenden auf Freitext- und ProForma-Fragen innerhalb des Tests (alle Versuche).<br><br>';
 //$string['reportproformasubmexport'] = 'Download submissions report';
 
@@ -46,4 +46,4 @@ $string['basename'] = 'Dateiname aus Frage (exkl. Pfad)';
 
 $string['includetextresponse'] = 'Textantworten einbeziehen';
 $string['includequestiontext'] = 'Fragetextdatei einbeziehen';
-$string['privacy:metadata'] = 'Das Plugin zum Herunterladen von ProFormA-Abgaben speichert keine persönlichen Daten.';
+$string['privacy:metadata'] = 'Das Plugin zum Herunterladen von Freitext und ProFormA-Abgaben speichert keine persönlichen Daten.';

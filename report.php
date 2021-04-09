@@ -150,29 +150,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     }
 
     /**
-     * Are there any proforma type questions in this quiz?
-     * @param int $quizid the quiz id.
-     */
-/*
-    public function quiz_has_proforma_questions($quizid) {
-    	global $DB;
-
-    	return $DB->record_exists_sql("
-            SELECT slot.slot,
-                   q.id,
-                   q.qtype,
-                   q.length,
-                   slot.maxmark
-
-              FROM {question} q
-              JOIN {quiz_slots} slot ON slot.questionid = q.id
-
-             WHERE q.qtype = 'proforma' or  q.qtype = 'essay'
-
-          ORDER BY slot.slot", array($quiz->id));
-    }
-*/
-    /**
      *  Get user attempts (quiz attempt alongwith question attempts) : Method 1
      */
     public function get_user_attempts($quiz, $course){
@@ -237,9 +214,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     	core_php_time_limit::raise();
 
     	// Build a list of files to zip.
-    	$filesforzipping = array();
-    	$context = context_course::instance($course->id);
-
         // Construct the zip file name.
         $ziptmpfilename = tempnam('/tmp', 'proformaexport') . '.zip';
         $ziparchive = new zip_archive();
@@ -248,11 +222,11 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             debugging('cannot create zip file ' . $ziptmpfilename);
             return false;
         }
-        $counter = 0;
+        // $counter = 0;
     	// Get the file submissions of each student.
     	foreach ($student_attempts as $student) {
-    	    echo 'Attempt ' . $counter;
-    	    $counter++;
+    		// echo 'Attempt ' . $counter;
+    		// $counter++;
 
     		// Construct download folder name.
     		$userid = $student->userid;
@@ -389,7 +363,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     		}
     	}
 
-    	echo 'Fini';
         $ziparchive->close();
         $zipfilename = clean_filename($course->fullname . ' - ' .
                 $quiz->name . ' - ' .
@@ -398,25 +371,4 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         send_temp_file($ziptmpfilename, $zipfilename);
     }
 
-    /**
-     * Generate zip file from array of given files.
-     *
-     * @param array $filesforzipping - array of files to pass into archive_to_pathname.
-     *                                 This array is indexed by the final file name and each
-     *                                 element in the array is an instance of a stored_file object.
-     * @return path of temp file - note this returned file does
-     *         not have a .zip extension - it is a temp file.
-     */
-    public function pack_files($filesforzipping) {
-    	global $CFG;
-    	// Create path for new zip file.
-    	$tempzip = tempnam($CFG->tempdir . '/', 'quiz_proforma_submissions_');
-
-    	// Zip files.
-    	$zipper = new zip_packer();
-    	if ($zipper->archive_to_pathname($filesforzipping, $tempzip)) {
-    		return $tempzip;
-    	}
-    	return false;
-    }
 }
