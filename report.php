@@ -248,8 +248,11 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
             debugging('cannot create zip file ' . $ziptmpfilename);
             return false;
         }
+        $counter = 0;
     	// Get the file submissions of each student.
     	foreach ($student_attempts as $student) {
+    	    echo 'Attempt ' . $counter;
+    	    $counter++;
 
     		// Construct download folder name.
     		$userid = $student->userid;
@@ -290,8 +293,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 //     		        if(!empty($qa->get_question()->questiontext)) {
         		        $qttextfilename = '/' . $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
                         $questiontextfile = $qa->get_question_summary();
-//                        $questiontextfile = $this->create_file_in_draft_area($context->id, $draftid,
-//                                $qttextfilename . '.text', $qa->get_question_summary());
 
         		    }
     		    }
@@ -299,11 +300,9 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
     		    // Writing text response to a file.
                 $editortext = null;
-    		    // if ($data->textresponse == 1) {
                 {
                     $answer = $qa->get_last_qt_var('answer');
                     if (isset($answer)) {
-        		        //$textfilename = '/' . $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
                         if (is_string($answer))
                             $editortext = $answer;
                         else if (get_class($answer) == 'question_file_loader')
@@ -347,10 +346,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 	    		    $fs_count++;
 	    			$zipfilename = $file->get_filename();
 	    			$pathfilename = $pathprefix . $file->get_filepath() . $zipfilename;
-                    // $pathfilename = $pathprefix . $file->get_filepath() . $prefix3 . 'filesubmission' . '_' . $zipfilename;
 	    			$pathfilename = clean_param($pathfilename, PARAM_PATH);
-	    			// $filesforzipping[$pathfilename] = $file;
-	    			// $ziparchive->add_file_from_pathname($pathfilename, $file);
                     // file is stored_file
                     $file->archive_file($ziparchive, $pathfilename);
 	    		}
@@ -373,10 +369,8 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                     if (empty($filename)) {
                         throw new coding_exception('editorfilename is not set');
                     }
-	    		    $pathfilename = $pathprefix . '/' . $filename; // 'editorresponse.txt';
-                    // $pathfilename = $pathprefix . '/' . $prefix3 . 'textresponse';
+	    		    $pathfilename = $pathprefix . '/' . $filename;
 	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
-	    		    // $filesforzipping[$pathfilename] = array($editortext);
 	    		    $ziparchive->add_file_from_string($pathfilename, $editortext);
 	    		}
 
@@ -389,33 +383,19 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     	    		        $pathfilename = $pathprefix . '/' . 'questiontext.txt';
     	    		    }
     	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
-    	    		    // $filesforzipping[$pathfilename] = array($questiontextfile);
     	    		    $ziparchive->add_file_from_string($pathfilename, $questiontextfile);
     	    		}
 	    		}
     		}
     	}
 
+    	echo 'Fini';
         $ziparchive->close();
         $zipfilename = clean_filename($course->fullname . ' - ' .
                 $quiz->name . ' - ' .
                 $cm->id . '.zip');
 
         send_temp_file($ziptmpfilename, $zipfilename);
-/*
-    	if (count($filesforzipping) == 0) {
-    	    return false;
-    	} else if ($zipfile = $this->pack_files($filesforzipping)) {
-            // Construct the zip file name.
-            $filename = clean_filename($course->fullname . ' - ' .
-                    $quiz->name . ' - ' .
-                    $cm->id . '.zip');
-    		// Send file and delete after sending.
-    		send_temp_file($zipfile, $filename);
-    		// We will not get here - send_temp_file calls exit.
-    	}
-    	return true;
-*/
     }
 
     /**
