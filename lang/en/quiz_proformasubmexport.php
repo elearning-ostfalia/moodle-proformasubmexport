@@ -30,7 +30,7 @@ $string['noproformaquestion'] = 'Quiz does not contain any proforma questions.';
 $string['noquestions'] = 'No questions have been added yet.';
 $string['nosubmission'] = 'No submissions found.';
 $string['pluginname'] = 'Download proforma submissions';
-$string['plugindescription'] = 'Download files/text responses submitted by all students (all attempts) in response to quiz proforma questions.<br><br>';
+$string['plugindescription'] = 'Download files/text responses submitted by all students (all attempts) in response to quiz essay and proforma questions.<br><br>';
 $string['reportproformasubmexport'] = 'Download submissions report';
 
 $string['options'] = 'Set preferences';
