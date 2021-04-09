@@ -62,10 +62,11 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         $hasproformaquestions = false;
         if ($questions) {
 	        foreach ($questions as $question) {
-	        	if ($question->qtype == 'proforma' || $question->qtype == 'essay' || $question->qtype == 'random') {
-	        		$hasproformaquestions = true;
-	        		break;
-	        	}
+                if ($question->qtype == 'proforma' || $question->qtype == 'essay' || $question->qtype == 'random') {
+                    $hasproformaquestions = true;
+                    break;
+                }
+            }
         }
         // Method 2 : Check {quiz_slots} table
         // $hasproformaquestions = $this->quiz_has_proforma_questions($quiz->id);
@@ -273,11 +274,14 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
     	// Build a list of files to zip.
     	$filesforzipping = array();
+    	$fs = get_file_storage();
     	$context = context_course::instance($course->id);
 
     	// Get the file submissions of each student.
+        $counter = 0;
     	foreach ($student_attempts as $student) {
-
+    	    $counter++;
+            // echo 'Studi ' . $counter;
     		// Construct download folder name.
     		$userid = $student->userid;
     		$questionid = 'Q' . $student->slot;   // Or use slot number from {quiz_slots} table.
@@ -300,54 +304,98 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     		$qa = $quba->get_question_attempt($student->slot);
     		$quba_contextid = $quba->get_owning_context()->id;
 
-
-    		if ($qa->get_question()->get_type_name() == 'proforma' or $qa->get_question()->get_type_name() == 'essay') {
+    		$qtype = $qa->get_question()->get_type_name();
+    		if ($qtype == 'proforma' || $qtype == 'essay' || $qtype == 'random') {
     		    $questionname = $qa->get_question()->name;
     		    $prefix1 .= ' - ' . $questionname;
 
                 // Get response filename set in question
-                $responsefilename = $qa->get_question()->responsefilename;
-                if (empty($responsefilename)) {
-                    $responsefilename = 'unknownfilename.txt';
+                $responsefilename = get_string('editorresponsename', 'quiz_proformasubmexport');
+                if (!empty($qa->get_question()->responsefilename)) {
+                    $responsefilename = $qa->get_question()->responsefilename;
                 }
 
     		    // Writing question text to a file.
                 $questiontextfile = null;
     		    if ($data->questiontext == 1) {
         		    if(!empty($qa->get_question_summary())) {
-//     		        if(!empty($qa->get_question()->questiontext)) {
-// PROFORMA        		        $qttextfilename = '/' . $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
-// PROFORMA                       $questiontextfile = $qa->get_question_summary();
-//                        $questiontextfile = $this->create_file_in_draft_area($context->id, $draftid,
-//                                $qttextfilename . '.text', $qa->get_question_summary());
-
+                        $questiontext = $qa->get_question_summary();
+        		        // $qttextfilename = $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
+                        $qttextfilename = '/' . $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
+        		        $qttextfileinfo = array (
+        		                'contextid' => $context->id,
+        		                'component' => 'quiz_downloadsubmissions',
+        		                'filearea'  => 'content',
+        		                'itemid'    => 0,
+        		                'filepath'  => '/',
+        		                'filename'  => $qttextfilename . '.txt');
+        		        if (!$fs->file_exists(
+        		                $qttextfileinfo['contextid'],
+        		                $qttextfileinfo['component'],
+        		                $qttextfileinfo['filearea'],
+        		                $qttextfileinfo['itemid'],
+        		                $qttextfileinfo['filepath'],
+        		                $qttextfileinfo['filename'])) {
+		                    $fs->create_file_from_string($qttextfileinfo, $questiontext);
+		                }
+		                $questiontextfile = $fs->get_file(
+	                        $qttextfileinfo['contextid'],
+	                        $qttextfileinfo['component'],
+	                        $qttextfileinfo['filearea'],
+	                        $qttextfileinfo['itemid'],
+	                        $qttextfileinfo['filepath'],
+	                        $qttextfileinfo['filename']);
         		    }
+                    //                        $questiontextfile = $this->create_file_in_draft_area($context->id, $draftid,
+                    //                                $qttextfilename . '.text', $qa->get_question_summary());
     		    }
 
 
     		    // Writing text response to a file.
                 $editortext = null;
     		    // if ($data->textresponse == 1) {
-                {
-                    $answer = $qa->get_last_qt_var('answer');
-                    if (isset($answer)) {
-        		        //$textfilename = '/' . $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
-                        if (is_string($answer))
-                            $editortext = $answer;
-                        else if (get_class($answer) == 'question_file_loader')
-                            $editortext = $answer->__toString();
-                        else {
-                            debugging(get_class($answer));
-                            $editortext = $answer;
-                        }
-        		    }
-    		    }
+                $answer = $qa->get_last_qt_var('answer');
+                if (isset($answer)) {
+                    //$textfilename = '/' . $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
+                    if (is_string($answer))
+                        $editortext = $answer;
+                    else if (get_class($answer) == 'question_file_loader')
+                        $editortext = $answer->__toString();
+                    else {
+                        debugging(get_class($answer));
+                        $editortext = $answer;
+                    }
+                }
 
-    		    if (1) { // $data->textresponse == 1) {
-        		    if (isset(editortext)) {
-					}
-				}
+    		    $textfile = null;
+                if (!empty($editortext)) {
+                    $textfilename = $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
+                    $textfileinfo = array (
+                            'contextid' => $context->id,
+                            'component' => 'quiz_downloadsubmissions',
+                            'filearea'  => 'content',
+                            'itemid'    => 0,
+                            'filepath'  => '/',
+                            'filename'  => $textfilename . '.txt');
 
+                    if (!$fs->file_exists(
+                            $textfileinfo['contextid'],
+                            $textfileinfo['component'],
+                            $textfileinfo['filearea'],
+                            $textfileinfo['itemid'],
+                            $textfileinfo['filepath'],
+                            $textfileinfo['filename'])) {
+                        $fs->create_file_from_string($textfileinfo, $editortext);
+                    }
+
+                    $textfile = $fs->get_file(
+                        $textfileinfo['contextid'],
+                        $textfileinfo['component'],
+                        $textfileinfo['filearea'],
+                        $textfileinfo['itemid'],
+                        $textfileinfo['filepath'],
+                        $textfileinfo['filename']);
+                }
 
     		    // Fetching attachments.
     			$name = 'attachments';
@@ -389,7 +437,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 	    		}
 
 	    		// II. text response strings
-	    		if (textfile) { // PROFORMA $editortext != null) {
+	    		if (isset($textfile)) { // PROFORMA $editortext != null) {
 	    		    switch ($data->editorfilename) {
                         case 'fix':
                             $filename = get_string('editorresponsename', 'quiz_proformasubmexport');
@@ -409,6 +457,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 	    		    $pathfilename = $pathprefix . '/' . $filename; // 'editorresponse.txt';
                     // $pathfilename = $pathprefix . '/' . $prefix3 . 'textresponse';
 	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
+                    $filesforzipping[$pathfilename] = $textfile;
 // PROFORMA	    		    $filesforzipping[$pathfilename] = array($editortext);
 	    		}
 
@@ -430,6 +479,8 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 	    		}
     		}
     	}
+
+    	// echo 'Erzeuge ZIP';
 
     	if (count($filesforzipping) == 0) {
     	    return false;
