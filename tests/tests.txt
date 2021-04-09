@@ -1,0 +1,13 @@
+Manual test with importing course and download with different paramaters: 
+
+1. Questionwise
+   Include question text file: no
+   Filename: fix
+
+2. Questionwise
+   Include question text file: yes
+   Filename: set in question (relative path)
+
+3. User attempt wise
+   Include question text file: yes
+   Filename: set in question (basename)
