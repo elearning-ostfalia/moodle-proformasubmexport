@@ -3,7 +3,7 @@
 #### Moodle Quiz Report Plugin for downloading ProFormA submissions. 
 
 The ProFormA Submission Export (proformasubmexport) plugin offers users a convenient way by which teachers can download 
-submissions in response to quiz ProForma questions.  
+submissions in response to quiz ProForma (and Essay) questions.  
 
 #### Installation
 * The plugin folder ‘proformasubmexport’ is to be added under ‘moodle/mod/quiz/report’ directory.
