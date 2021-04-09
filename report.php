@@ -16,9 +16,6 @@
 
 /**
  * This file defines the quiz proformasubmexport report class.
- * Support for randomly selected essay questions included 
- * as suggested by gabriosecco 
- * (https://github.com/IITBombayWeb/moodle-quiz_downloadsubmissions/issues/2#issuecomment-613266125)
  *
  * @package   quiz_proformasubmexport
  * @copyright 2017 IIT Bombay
@@ -29,44 +26,40 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
 require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
-
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
+require_once($CFG->libdir . '/filestorage/zip_archive.php');
 
 /**
-
  * Quiz report subclass for the proformasubmexport report.
  *
  * This report allows you to download file attachments submitted
-
  * by students as a response to quiz proforma questions.
  *
  * @copyright 1999 onwards Martin Dougiamas and others {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class quiz_proformasubmexport_report extends quiz_attempts_report {
 
 	public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB;
-
 
         $mform = new quiz_proformasubmexport_settings_form();
 
         // Load the required questions.
         $questions = quiz_report_get_significant_questions($quiz);
 
-
         // Check if the quiz contains proforma type questions.
-        // Method 1 : Check $questions object for existence of matching question types
+        // Method 1 : Check $questions object for existence proforma type questions
         $hasproformaquestions = false;
         if ($questions) {
 	        foreach ($questions as $question) {
                 if ($question->qtype == 'proforma' || $question->qtype == 'essay' || $question->qtype == 'random') {
-                    $hasproformaquestions = true;
-                    break;
-                }
-            }
+	        		$hasproformaquestions = true;
+	        		break;
+	        	}
+	        }
         }
         // Method 2 : Check {quiz_slots} table
         // $hasproformaquestions = $this->quiz_has_proforma_questions($quiz->id);
@@ -157,29 +150,6 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     }
 
     /**
-     * Are there any proforma type questions in this quiz?
-     * @param int $quizid the quiz id.
-     */
-/*
-    public function quiz_has_proforma_questions($quizid) {
-    	global $DB;
-
-    	return $DB->record_exists_sql("
-            SELECT slot.slot,
-                   q.id,
-                   q.qtype,
-                   q.length,
-                   slot.maxmark
-
-              FROM {question} q
-              JOIN {quiz_slots} slot ON slot.questionid = q.id
-
-             WHERE q.qtype = 'proforma' or  q.qtype = 'essay'
-
-          ORDER BY slot.slot", array($quiz->id));
-    }
-*/
-    /**
      *  Get user attempts (quiz attempt alongwith question attempts) : Method 1
      */
     public function get_user_attempts($quiz, $course){
@@ -223,36 +193,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
     	return $user_attempts;
     }
-/*
-    protected function create_draft_area($contextid) {
-        $draftid = 0;
-        //$contextid = 0;
 
-        $component = 'quiz_proformasubmexport';
-        $filearea = 'filecontent';
-
-        // Create an empty file area.
-        file_prepare_draft_area($draftid, $contextid, $component, $filearea, null);
-        return $draftid;
-    }
-
-    protected function create_file_in_draft_area($contextid, $draftid, $filename, $content) {
-        global $USER;
-
-        $fs = get_file_storage();
-
-        // Create the file in the provided draft area.
-        $fileinfo = array(
-                'contextid' => $contextid,
-                'component' => 'user',
-                'filearea'  => 'draft',
-                'itemid'    => $draftid,
-                'filepath'  => '/',
-                'filename' => $filename,
-        );
-        return $fs->create_file_from_string($fileinfo, $content);
-    }
-*/
 
     /**
      * Download a zip file containing quiz proforma submissions.
@@ -273,15 +214,20 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     	core_php_time_limit::raise();
 
     	// Build a list of files to zip.
-    	$filesforzipping = array();
-    	$fs = get_file_storage();
-    	$context = context_course::instance($course->id);
-
+        // Construct the zip file name.
+        $ziptmpfilename = tempnam('/tmp', 'proformaexport') . '.zip';
+        $ziparchive = new zip_archive();
+        // debugging($ziptmpfilename);
+        if (!$ziparchive->open($ziptmpfilename)) {
+            debugging('cannot create zip file ' . $ziptmpfilename);
+            return false;
+        }
+        // $counter = 0;
     	// Get the file submissions of each student.
-        $counter = 0;
     	foreach ($student_attempts as $student) {
-    	    $counter++;
-            // echo 'Studi ' . $counter;
+    		// echo 'Attempt ' . $counter;
+    		// $counter++;
+
     		// Construct download folder name.
     		$userid = $student->userid;
     		$questionid = 'Q' . $student->slot;   // Or use slot number from {quiz_slots} table.
@@ -303,8 +249,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
     		$quba = $dm->load_questions_usage_by_activity($student->qubaid);
     		$qa = $quba->get_question_attempt($student->slot);
     		$quba_contextid = $quba->get_owning_context()->id;
-
-    		$qtype = $qa->get_question()->get_type_name();
+		    $qtype = $qa->get_question()->get_type_name();
     		if ($qtype == 'proforma' || $qtype == 'essay' || $qtype == 'random') {
     		    $questionname = $qa->get_question()->name;
     		    $prefix1 .= ' - ' . $questionname;
@@ -319,83 +264,29 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                 $questiontextfile = null;
     		    if ($data->questiontext == 1) {
         		    if(!empty($qa->get_question_summary())) {
-                        $questiontext = $qa->get_question_summary();
-        		        // $qttextfilename = $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
-                        $qttextfilename = '/' . $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
-        		        $qttextfileinfo = array (
-        		                'contextid' => $context->id,
-        		                'component' => 'quiz_downloadsubmissions',
-        		                'filearea'  => 'content',
-        		                'itemid'    => 0,
-        		                'filepath'  => '/',
-        		                'filename'  => $qttextfilename . '.txt');
-        		        if (!$fs->file_exists(
-        		                $qttextfileinfo['contextid'],
-        		                $qttextfileinfo['component'],
-        		                $qttextfileinfo['filearea'],
-        		                $qttextfileinfo['itemid'],
-        		                $qttextfileinfo['filepath'],
-        		                $qttextfileinfo['filename'])) {
-		                    $fs->create_file_from_string($qttextfileinfo, $questiontext);
-		                }
-		                $questiontextfile = $fs->get_file(
-	                        $qttextfileinfo['contextid'],
-	                        $qttextfileinfo['component'],
-	                        $qttextfileinfo['filearea'],
-	                        $qttextfileinfo['itemid'],
-	                        $qttextfileinfo['filepath'],
-	                        $qttextfileinfo['filename']);
+//     		        if(!empty($qa->get_question()->questiontext)) {
+        		        $qttextfilename = '/' . $questionid . ' - ' . $questionname . ' - ' . 'questiontext';
+                        $questiontextfile = $qa->get_question_summary();
+
         		    }
-                    //                        $questiontextfile = $this->create_file_in_draft_area($context->id, $draftid,
-                    //                                $qttextfilename . '.text', $qa->get_question_summary());
     		    }
 
 
     		    // Writing text response to a file.
                 $editortext = null;
-    		    // if ($data->textresponse == 1) {
-                $answer = $qa->get_last_qt_var('answer');
-                if (isset($answer)) {
-                    //$textfilename = '/' . $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
-                    if (is_string($answer))
-                        $editortext = $answer;
-                    else if (get_class($answer) == 'question_file_loader')
-                        $editortext = $answer->__toString();
-                    else {
-                        debugging(get_class($answer));
-                        $editortext = $answer;
-                    }
-                }
-
-    		    $textfile = null;
-                if (!empty($editortext)) {
-                    $textfilename = $prefix1 . ' - ' . $prefix2 . ' - ' . 'textresponse';
-                    $textfileinfo = array (
-                            'contextid' => $context->id,
-                            'component' => 'quiz_downloadsubmissions',
-                            'filearea'  => 'content',
-                            'itemid'    => 0,
-                            'filepath'  => '/',
-                            'filename'  => $textfilename . '.txt');
-
-                    if (!$fs->file_exists(
-                            $textfileinfo['contextid'],
-                            $textfileinfo['component'],
-                            $textfileinfo['filearea'],
-                            $textfileinfo['itemid'],
-                            $textfileinfo['filepath'],
-                            $textfileinfo['filename'])) {
-                        $fs->create_file_from_string($textfileinfo, $editortext);
-                    }
-
-                    $textfile = $fs->get_file(
-                        $textfileinfo['contextid'],
-                        $textfileinfo['component'],
-                        $textfileinfo['filearea'],
-                        $textfileinfo['itemid'],
-                        $textfileinfo['filepath'],
-                        $textfileinfo['filename']);
-                }
+                {
+                    $answer = $qa->get_last_qt_var('answer');
+                    if (isset($answer)) {
+                        if (is_string($answer))
+                            $editortext = $answer;
+                        else if (get_class($answer) == 'question_file_loader')
+                            $editortext = $answer->__toString();
+                        else {
+                            debugging(get_class($answer));
+                            $editortext = $answer;
+                        }
+        		    }
+    		    }
 
     		    // Fetching attachments.
     			$name = 'attachments';
@@ -417,10 +308,8 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
     			// Set the download folder hierarchy.
     			if ($data->folders == 'questionwise') {
-        			//$prefixedfilename = clean_filename($prefix1 . '/' . $prefix2);
         			$pathprefix = $prefix1 . '/' . $prefix2 . '/';
     			} else if ($data->folders == 'attemptwise') {
-    			    //$prefixedfilename = clean_filename($prefix2 . '/' . $prefix1);
     			    $pathprefix = $prefix2 . '/' . $prefix1 . '/';
     			}
 
@@ -431,13 +320,13 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 	    		    $fs_count++;
 	    			$zipfilename = $file->get_filename();
 	    			$pathfilename = $pathprefix . $file->get_filepath() . $zipfilename;
-                    // $pathfilename = $pathprefix . $file->get_filepath() . $prefix3 . 'filesubmission' . '_' . $zipfilename;
 	    			$pathfilename = clean_param($pathfilename, PARAM_PATH);
-	    			$filesforzipping[$pathfilename] = $file;
+                    // file is stored_file
+                    $file->archive_file($ziparchive, $pathfilename);
 	    		}
 
 	    		// II. text response strings
-	    		if (isset($textfile)) { // PROFORMA $editortext != null) {
+	    		if ($editortext != null) {
 	    		    switch ($data->editorfilename) {
                         case 'fix':
                             $filename = get_string('editorresponsename', 'quiz_proformasubmexport');
@@ -454,68 +343,32 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                     if (empty($filename)) {
                         throw new coding_exception('editorfilename is not set');
                     }
-	    		    $pathfilename = $pathprefix . '/' . $filename; // 'editorresponse.txt';
-                    // $pathfilename = $pathprefix . '/' . $prefix3 . 'textresponse';
+	    		    $pathfilename = $pathprefix . '/' . $filename;
 	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
-                    $filesforzipping[$pathfilename] = $textfile;
-// PROFORMA	    		    $filesforzipping[$pathfilename] = array($editortext);
+	    		    $ziparchive->add_file_from_string($pathfilename, $editortext);
 	    		}
 
 	    		// III. question text strings
 	    		if (!empty($files) | $editortext != null) {
     	    		if ($questiontextfile) {
-//    	    		    $zipfilename = $questiontextfile->get_filename();
-    // 	    		    $pathfilename = $pathprefix . $textfile->get_filepath() . $prefix3 . $zipfilename;
-
     	    		    if ($data->folders == 'questionwise') {
     	    		        $pathfilename = $prefix1 . '/' . 'questiontext.txt';
     	    		    } else if ($data->folders == 'attemptwise') {
     	    		        $pathfilename = $pathprefix . '/' . 'questiontext.txt';
     	    		    }
     	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
-    	    		    $filesforzipping[$pathfilename] = $questiontextfile;
-// PROFORMA    	    		    $filesforzipping[$pathfilename] = array($questiontextfile);
+    	    		    $ziparchive->add_file_from_string($pathfilename, $questiontextfile);
     	    		}
 	    		}
     		}
     	}
 
-    	// echo 'Erzeuge ZIP';
+        $ziparchive->close();
+        $zipfilename = clean_filename($course->fullname . ' - ' .
+                $quiz->name . ' - ' .
+                $cm->id . '.zip');
 
-    	if (count($filesforzipping) == 0) {
-    	    return false;
-    	} else if ($zipfile = $this->pack_files($filesforzipping)) {
-            // Construct the zip file name.
-            $filename = clean_filename($course->fullname . ' - ' .
-                    $quiz->name . ' - ' .
-                    $cm->id . '.zip');
-    		// Send file and delete after sending.
-    		send_temp_file($zipfile, $filename);
-    		// We will not get here - send_temp_file calls exit.
-    	}
-
-    	return true;
+        send_temp_file($ziptmpfilename, $zipfilename);
     }
 
-    /**
-     * Generate zip file from array of given files.
-     *
-     * @param array $filesforzipping - array of files to pass into archive_to_pathname.
-     *                                 This array is indexed by the final file name and each
-     *                                 element in the array is an instance of a stored_file object.
-     * @return path of temp file - note this returned file does
-     *         not have a .zip extension - it is a temp file.
-     */
-    public function pack_files($filesforzipping) {
-    	global $CFG;
-    	// Create path for new zip file.
-    	$tempzip = tempnam($CFG->tempdir . '/', 'quiz_proforma_submissions_');
-
-    	// Zip files.
-    	$zipper = new zip_packer();
-    	if ($zipper->archive_to_pathname($filesforzipping, $tempzip)) {
-    		return $tempzip;
-    	}
-    	return false;
-    }
 }
