@@ -30,7 +30,7 @@ $string['noproformaquestion'] = 'Das Quiz enthält keine Freiext- oder ProFormA-
 $string['noquestions'] = 'Das Quiz enthält keine Fragen.';
 $string['nosubmission'] = 'Es wurden keine Abgaben gefunden.';
 $string['pluginname'] = ' Herunterladen von Freiext- oder ProFormA-Abgaben';
-$string['plugindescription'] = 'Herunterladen der letzten Abgaben aller Studierenden auf Freitext- und ProForma-Fragen innerhalb des Tests (alle Versuche).<br><br>';
+$string['plugindescription'] = 'Herunterladen der Abgaben aller Studierenden auf Freitext- und ProForma-Fragen innerhalb des Tests (alle Versuche).<br><br>';
 //$string['reportproformasubmexport'] = 'Download submissions report';
 
 
