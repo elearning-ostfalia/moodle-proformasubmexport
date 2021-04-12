@@ -41,8 +41,10 @@ $string['attemptwise'] = 'Studierende(r) / Frage';
 
 $string['editorfilename'] = 'Dateiname bei Eingabe im Editor';
 $string['fix'] = 'fest';
-$string['pathname'] = 'Dateiname aus Frage (inkl. Pfad)';
-$string['basename'] = 'Dateiname aus Frage (exkl. Pfad)';
+$string['pathname'] = 'ProFormA: kompletter Dateiname aus Frage (inkl. Pfad)';
+$string['basename'] = 'ProFormA: Basis-Dateiname aus Frage (exkl. Pfad)';
+$string['notextreponse'] = 'keine Editoreingaben';
+
 
 $string['includetextresponse'] = 'Textantworten einbeziehen';
 $string['includequestiontext'] = 'Fragetextdatei einbeziehen';

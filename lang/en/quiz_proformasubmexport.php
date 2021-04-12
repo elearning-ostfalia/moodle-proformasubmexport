@@ -41,8 +41,9 @@ $string['attemptwise'] = 'User attempt wise';
 
 $string['editorfilename'] = 'Filename used for editor input';
 $string['fix'] = 'fix';
-$string['pathname'] = 'filename set in question (including relative path)';
-$string['basename'] = 'basename set in question (excluding relative path)';
+$string['pathname'] = 'ProFormA: filename set in question (including relative path)';
+$string['basename'] = 'ProFormA: basename set in question (excluding relative path)';
+$string['notextreponse'] = 'no editor output';
 $string['editorresponsename'] = 'editorresponse.txt';
 
 $string['includetextresponse'] = 'Include text response file';

@@ -337,15 +337,19 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
                         case 'basename':
                             $filename = basename($responsefilename);
                             break;
+                        case 'noeditor':
+                            $editortext = null;
+                            break;
                         default:
                             throw new coding_exception('invalid case for editorfilename');
                     }
-                    if (empty($filename)) {
-                        throw new coding_exception('editorfilename is not set');
+                    if (!empty($editortext)) {
+                        if (empty($filename)) {
+                            throw new coding_exception('editorfilename is not set');
+                        }                        $pathfilename = $pathprefix . '/' . $filename;
+                        $pathfilename = clean_param($pathfilename, PARAM_PATH);
+                        $ziparchive->add_file_from_string($pathfilename, $editortext);
                     }
-	    		    $pathfilename = $pathprefix . '/' . $filename;
-	    		    $pathfilename = clean_param($pathfilename, PARAM_PATH);
-	    		    $ziparchive->add_file_from_string($pathfilename, $editortext);
 	    		}
 
 	    		// III. question text strings
@@ -365,8 +369,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
 
         $ziparchive->close();
         $zipfilename = clean_filename($course->fullname . ' - ' .
-                $quiz->name . ' - ' .
-                $cm->id . '.zip');
+                $quiz->name . '.zip');
 
         send_temp_file($ziptmpfilename, $zipfilename);
     }

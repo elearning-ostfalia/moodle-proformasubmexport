@@ -94,7 +94,8 @@ class quiz_proformasubmexport_settings_form extends moodleform {
                         'fix'    => get_string('fix', 'quiz_proformasubmexport') . ' (' .
                                 get_string('editorresponsename', 'quiz_proformasubmexport') . ')',
                         'pathname'     => get_string('pathname', 'quiz_proformasubmexport'),
-                        'basename'     => get_string('basename', 'quiz_proformasubmexport')
+                        'basename'     => get_string('basename', 'quiz_proformasubmexport'),
+                        'noeditor'     => get_string('notextreponse', 'quiz_proformasubmexport')
                         ));
 
 // 		$mform->addElement('submit', 'proformasubmexport', get_string('proformasubmexport', 'quiz_proformasubmexport'));

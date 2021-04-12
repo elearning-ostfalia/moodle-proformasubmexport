@@ -11,3 +11,7 @@ Manual test with importing course and download with different paramaters:
 3. User attempt wise
    Include question text file: yes
    Filename: set in question (basename)
+   
+4. Questionwise
+   Include question text file: yes
+   Filename: no
