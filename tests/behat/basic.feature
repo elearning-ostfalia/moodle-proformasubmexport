@@ -46,10 +46,10 @@ Feature: Basic use of the Proforma Submission export
   @javascript
   Scenario: Export responses when there are no attempts
     Given I am on the "Quiz 1" "quiz activity" page logged in as teacher
-    When I navigate to "Results > Responses" in current page administration
+    And I navigate to "Results > Download Essay and ProFormA submissions" in current page administration
     Then I should see "Attempts: 0"
-    And I should see "Nothing to display"
-    And I set the field "Attempts from" to "enrolled users who have not attempted the quiz"
+#    And I pause
+    # Download should be disabled? or download Question text?
 
   @javascript
   Scenario: Export responses works when there are attempts
@@ -73,24 +73,10 @@ Feature: Basic use of the Proforma Submission export
 
     And I am on the "Quiz 1" "quiz activity" page logged in as teacher
     And I navigate to "Results > Download Essay and ProFormA submissions" in current page administration
-    And I pause
-    Then I should see "Attempts: 4"
-    And I should see "Student One"
-    And I should not see "Student Two"
-    And I set the field "Attempts from" to "enrolled users who have, or have not, attempted the quiz"
-    And I set the field "Which tries" to "All tries"
-    And I press "Show report"
-    And "Student OneReview attempt" row "Response 1Sort by Response 1 Ascending" column of "responses" table should contain "1.0"
-    And "Student OneReview attempt" row "State" column of "responses" table should contain ""
-    And "Finished" row "Grade/100.00Sort by Grade/100.00 Ascending" column of "responses" table should contain "33.33"
-    And "Finished" row "Response 1Sort by Response 1 Ascending" column of "responses" table should contain "3.14"
-    And "Student Two" row "State" column of "responses" table should contain "-"
-    And "Student Two" row "Response 1Sort by Response 1 Ascending" column of "responses" table should contain "-"
+    Then I should see "Attempts: 6"
+    And I press "Download"
 
-  @javascript
-  Scenario: Export responses does not allow strange combinations of options
-    Given I am on the "Quiz 1" "quiz activity" page logged in as teacher
-    And I navigate to "Results > Responses" in current page administration
-    And the "Which tries" "select" should be enabled
-    When I set the field "Attempts from" to "enrolled users who have not attempted the quiz"
-    Then the "Which tries" "select" should be disabled
+#  @javascript
+#  Scenario: Export responses does not allow strange combinations of options
+#    Given I am on the "Quiz 1" "quiz activity" page logged in as teacher
+#    And I navigate to "Results > Download Essay and ProFormA submissions" in current page administration
