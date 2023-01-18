@@ -14,18 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
 namespace quiz_responses;
 
-use question_bank;
+defined('MOODLE_INTERNAL') || die();
+
+use question_bank ;
 use quiz_attempt;
 
-defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/mod/quiz/tests/attempt_walkthrough_from_csv_test.php');
 require_once($CFG->dirroot . '/mod/quiz/report/default.php');
 require_once($CFG->dirroot . '/mod/quiz/report/statistics/report.php');
 require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
+require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/report.php');
+
+
 
 /**
  * Quiz attempt walk through using data from csv file.
@@ -68,6 +73,20 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
             }
             $this->assert_response_test($quizattemptids[$responses['quizattempt']], $responses);
         }
+
+        $report = new \quiz_proformasubmexport_report();
+        // call of protected method
+        // $report->download_proforma_submissions($this->quiz, $cm, $course, $student_attempts);
+
+        $r = new \ReflectionMethod('\quiz_proformasubmexport_report', 'download_proforma_submissions');
+        $r->setAccessible(true);
+        $cm = null; // unused.
+        global $DB;
+        $course = $DB->get_record('course', array('id' => $this->quiz->course));
+        $user_attempts = $report->get_user_attempts($this->quiz, $course);
+
+        // function send_temp_file($path, $filename, $pathisstring=false)
+        $r->invoke($report, $this->quiz, $cm, $course, $user_attempts);
     }
 
     protected function assert_response_test($quizattemptid, $responses) {

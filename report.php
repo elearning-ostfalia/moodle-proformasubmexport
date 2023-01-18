@@ -50,7 +50,7 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         // Load the required questions.
         $questions = quiz_report_get_significant_questions($quiz);
 
-        // Check if the quiz contains proforma type questions.
+        // Check if the quiz contains proforma or essay type questions.
         // Method 1 : Check $questions object for existence proforma type questions
         $hasproformaquestions = false;
         if ($questions) {
