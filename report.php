@@ -371,7 +371,12 @@ class quiz_proformasubmexport_report extends quiz_attempts_report {
         $zipfilename = clean_filename($course->fullname . ' - ' .
                 $quiz->name . '.zip');
 
-        send_temp_file($ziptmpfilename, $zipfilename);
+        if (defined('UNITTEST_IS_RUNNING')) {
+            // Do nothing
+            return $ziptmpfilename;
+        } else {
+            send_temp_file($ziptmpfilename, $zipfilename);
+        }
     }
 
 }

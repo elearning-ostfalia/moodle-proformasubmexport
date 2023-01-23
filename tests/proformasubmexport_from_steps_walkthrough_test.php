@@ -22,6 +22,7 @@ defined('MOODLE_INTERNAL') || die();
 use question_bank ;
 use quiz_attempt;
 
+define('UNITTEST_IS_RUNNING', true);
 
 global $CFG;
 require_once($CFG->dirroot . '/mod/quiz/tests/attempt_walkthrough_from_csv_test.php');
@@ -34,6 +35,9 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/report.php');
 
 /**
  * Quiz attempt walk through using data from csv file.
+ *
+ * CSV data files for these tests were generated using :
+ * https://github.com/jamiepratt/moodle-quiz-tools/tree/master/responsegenerator *
  *
  * @package    quiz_responses
  * @category   test
@@ -75,18 +79,15 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
         }
 
         $report = new \quiz_proformasubmexport_report();
-        // call of protected method
-        // $report->download_proforma_submissions($this->quiz, $cm, $course, $student_attempts);
-
+        // call of protected method $report->download_proforma_submissions
         $r = new \ReflectionMethod('\quiz_proformasubmexport_report', 'download_proforma_submissions');
         $r->setAccessible(true);
         $cm = null; // unused.
         global $DB;
         $course = $DB->get_record('course', array('id' => $this->quiz->course));
         $user_attempts = $report->get_user_attempts($this->quiz, $course);
-
-        // function send_temp_file($path, $filename, $pathisstring=false)
-        $r->invoke($report, $this->quiz, $cm, $course, $user_attempts);
+        $filename = $r->invoke($report, $this->quiz, $cm, $course, $user_attempts);
+        echo $filename;
     }
 
     protected function assert_response_test($quizattemptid, $responses) {
