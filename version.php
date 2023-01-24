@@ -25,9 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2021041200;
+$plugin->version   = 2023012400;
 $plugin->requires  = 2017051500;
 $plugin->cron      = 18000;
 $plugin->component = 'quiz_proformasubmexport';
-$plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '0.9.3';
+$plugin->maturity  = MATURITY_STABLE;
+$plugin->release   = '0.9.4';

@@ -43,7 +43,7 @@ $string['editorfilename'] = 'Dateiname bei Eingabe im Editor';
 $string['fix'] = 'fest';
 $string['pathname'] = 'ProFormA: kompletter Dateiname aus Frage (inkl. Pfad)';
 $string['basename'] = 'ProFormA: Basis-Dateiname aus Frage (exkl. Pfad)';
-$string['notextreponse'] = 'keine Editoreingaben';
+$string['notextreponse'] = 'Editoreingaben nicht exportieren';
 
 
 $string['includetextresponse'] = 'Textantworten einbeziehen';

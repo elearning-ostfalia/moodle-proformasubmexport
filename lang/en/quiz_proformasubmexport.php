@@ -43,7 +43,7 @@ $string['editorfilename'] = 'Filename used for editor input';
 $string['fix'] = 'fix';
 $string['pathname'] = 'ProFormA: filename set in question (including relative path)';
 $string['basename'] = 'ProFormA: basename set in question (excluding relative path)';
-$string['notextreponse'] = 'no editor output';
+$string['notextreponse'] = 'do not export editor input';
 $string['editorresponsename'] = 'editorresponse.txt';
 
 $string['includetextresponse'] = 'Include text response file';
