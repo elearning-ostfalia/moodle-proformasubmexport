@@ -86,8 +86,88 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
         global $DB;
         $course = $DB->get_record('course', array('id' => $this->quiz->course));
         $user_attempts = $report->get_user_attempts($this->quiz, $course);
-        $filename = $r->invoke($report, $this->quiz, $cm, $course, $user_attempts);
-        echo $filename;
+
+        // Possible combinations
+        $questionstexts = [0, 1];
+        $folders = ['questionwise', 'attemptwise'];
+        $editorfilenames = ['pathname', 'fix', 'pathname', 'noeditor'];
+
+        foreach ($editorfilenames as $editorfilename) {
+            foreach ($questionstexts as $questionstext) {
+                foreach ($folders as $folder) {
+                    $data = new \stdClass();
+                    $data->folders = $folder;
+                    $data->questiontext = $questionstext;
+                    $data->editorfilename = $editorfilename;
+                    var_dump($data);
+
+                    $filename = $r->invoke($report, $this->quiz, $cm, $course, $user_attempts, $data);
+                    echo $filename;
+
+                    $archive = new \ZipArchive();
+                    $archive->open($filename);
+                    $countMatches = 0; // count number of matching files.
+                    $countSteps = 0;
+
+                    foreach ($csvdata['steps'] as $stepsfromcsv) {
+                        $steps = $this->explode_dot_separated_keys_to_make_subindexs($stepsfromcsv);
+
+                        foreach ($steps['responses'] as $index => $answer) {
+                            if ('noeditor' != $editorfilename) {
+                                $countSteps++;
+                            }
+
+                            if ($this->find_answer($steps, $index, $answer, $archive, $data)) {
+                                $countMatches++;
+                            }
+                        }
+                    }
+
+                    $this->assertEquals($countSteps, $countMatches);
+                    // Note: Two attempts come from qtype_proforma - Test helper
+                    $this->assertTrue($archive->numFiles >= $countMatches);
+
+                    for( $i = 0; $i < $archive->numFiles; $i++ ) {
+                        $filename = $archive->getNameIndex($i);
+                        $filecontent = $archive->getFromName($filename);
+                        // Dump first file name and content.
+                        var_dump($filename);
+                        var_dump($filecontent);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    protected function find_answer($steps, $questionindex, $answer, $archive, $data) {
+        $question = 'Q' . $questionindex;
+        // var_dump($question);
+        $path = $steps['firstname'] . ' ' . $steps['lastname'] . ' - Attempt1';
+        // var_dump($path);
+//              $path = 'username' . ' - ' . $steps['firstname'] . ' ' . $steps['lastname'] . ' - Attempt';
+        $content = $answer['answer'];
+
+        for( $i = 0; $i < $archive->numFiles; $i++ ) {
+            $filename = $archive->getNameIndex($i);
+            if (strpos($filename, $question) === false) {
+                continue;
+            }
+            if (strpos($filename, $path) === false) {
+                continue;
+            }
+            // filename found => check content.
+            // var_dump($filename);
+            $filecontent = $archive->getFromName($filename);
+            // var_dump($filecontent);
+            $this->assertEquals($filecontent, $content);
+            return true;
+
+            // $stat = $archive->statIndex( $i );
+            // print_r( basename( $stat['name'] ) . PHP_EOL );
+        }
+
+        return false;
     }
 
     protected function assert_response_test($quizattemptid, $responses) {
