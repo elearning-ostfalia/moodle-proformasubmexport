@@ -46,6 +46,8 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/report.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_walkthrough_from_csv_test {
+    const delete_tmp_archives = true;
+
     protected function get_full_path_of_csv_file($setname, $test) {
         // Overridden here so that __DIR__ points to the path of this file.
         return  __DIR__."/fixtures/{$setname}{$test}.csv";
@@ -101,11 +103,11 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                     $data->editorfilename = $editorfilename;
                     var_dump($data);
 
-                    $filename = $r->invoke($report, $this->quiz, $cm, $course, $user_attempts, $data);
-                    echo $filename;
+                    $filenamearchive = $r->invoke($report, $this->quiz, $cm, $course, $user_attempts, $data);
+                    echo $filenamearchive;
 
                     $archive = new \ZipArchive();
-                    $archive->open($filename);
+                    $archive->open($filenamearchive);
                     $countMatches = 0; // count number of matching files.
                     $countSteps = 0;
 
@@ -134,6 +136,10 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                         var_dump($filename);
                         var_dump($filecontent);
                         break;
+                    }
+
+                    if (self::delete_tmp_archives) {
+                        unlink($filenamearchive);
                     }
                 }
             }
