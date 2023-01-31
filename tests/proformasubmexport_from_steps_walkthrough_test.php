@@ -54,6 +54,156 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
     }
 
     protected $files = array('questions', 'steps', 'responses');
+    protected $uploadedfiles = array();
+
+    /**
+     * Helper method: Store a test file with a given name and contents in a
+     * draft file area.
+     *
+     * @param int $usercontextid user context id.
+     * @param int $draftitemid draft item id.
+     * @param string $filename filename.
+     * @param string $contents file contents.
+     */
+    private function save_file_to_draft_area($usercontextid, $draftitemid, $filename, $contents) {
+        $fs = get_file_storage();
+
+        $filerecord = new \stdClass();
+        $filerecord->contextid = $usercontextid;
+        $filerecord->component = 'user';
+        $filerecord->filearea = 'draft';
+        $filerecord->itemid = $draftitemid;
+        $filerecord->filepath = '/';
+        $filerecord->filename = $filename;
+        $fs->create_file_from_string($filerecord, $contents);
+    }
+
+
+    protected function upload_file($user, $attachementsdraftid, $response, $filename = 'MyString.java') {
+        // global $USER;
+        $usercontextid = \context_user::instance($user->id)->id;
+        // we need to get the draft item ids.
+        // $this->render();
+/*        if (!preg_match('/env=filemanager&amp;action=browse&amp;.*?itemid=(\d+)&amp;/', $this->currentoutput, $matches)) {
+            throw new \coding_exception('File manager draft item id not found.');
+        }
+        $attachementsdraftid = $matches[1];*/
+
+        // save to draft area
+        $this->save_file_to_draft_area($usercontextid, $attachementsdraftid, $filename, $response);
+
+        // update storage for uploaded files
+        $this->uploadedfiles[$attachementsdraftid] = array(
+            'filename' => $filename,
+            'content' => $response);
+
+        //$this->last_attachments = $this->current_attachments;
+        //$this->current_attachments = $response;
+
+        // $this->is_graded = false;
+
+        return $attachementsdraftid;
+    }
+
+    /**
+     * @param $steps array the step data from the csv file.
+     * @return array attempt no as in csv file => the id of the quiz_attempt as stored in the db.
+     */
+    protected function my_walkthrough_attempts($steps) {
+        global $DB;
+        $course = $DB->get_record('course', array('id' => $this->quiz->course), '*', MUST_EXIST);
+
+/*        $cm = new \stdClass();
+        $cm->id = 0;
+        $quiz = new \quiz($this->quiz, $cm, $course);
+        if ($quiz->has_questions()) {
+            $quiz->load_questions();
+        }
+*/
+        global $DB;
+        $attemptids = array();
+        foreach ($steps as $steprow) {
+
+            $step = $this->explode_dot_separated_keys_to_make_subindexs($steprow);
+            // Find existing user or make a new user to do the quiz.
+            $username = array('firstname' => $step['firstname'],
+                'lastname'  => $step['lastname']);
+
+            if (!$user = $DB->get_record('user', $username)) {
+                $user = $this->getDataGenerator()->create_user($username);
+            }
+
+            if (!isset($attemptids[$step['quizattempt']])) {
+                // Start the attempt.
+                $quizobj = \quiz::create($this->quiz->id, $user->id);
+                if ($quizobj->has_questions()) {
+                    $quizobj->load_questions();
+                }
+                $slots = [];
+                foreach ($quizobj->get_questions() as $question) {
+                    $slots[$question->slot] = $question;
+                }
+
+                // TODO: convert filepicker date in $step array to match proforma format
+                foreach ($step['responses'] as $slot => &$response) { // slot or question??
+                    $type = $slots[$slot]->qtype;
+                    if ($type == 'proforma') {
+                        // Check for filepicker and explorer
+                        switch ($slots[$slot]->options->responseformat) {
+                            case 'editor':
+                                break;
+                            case 'filepicker':
+                            case 'explorer':
+                                $attachementsdraftid = file_get_unused_draft_itemid();
+
+                                $response['attachments'] = $this->upload_file($user, $attachementsdraftid, $response['answer']);
+                                unset($response['answer']);
+                                break;
+                            default:
+                                throw new \coding_exception('invalid proforma subtype ' . $slots[$slot]->options->responseformat);
+                        }
+                    }
+                }
+
+                $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
+                $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
+
+                $prevattempts = quiz_get_user_attempts($this->quiz->id, $user->id, 'all', true);
+                $attemptnumber = count($prevattempts) + 1;
+                $timenow = time();
+                $attempt = quiz_create_attempt($quizobj, $attemptnumber, false, $timenow, false, $user->id);
+                // Select variant and / or random sub question.
+                if (!isset($step['variants'])) {
+                    $step['variants'] = array();
+                }
+                if (isset($step['randqs'])) {
+                    // Replace 'names' with ids.
+                    foreach ($step['randqs'] as $slotno => $randqname) {
+                        $step['randqs'][$slotno] = $this->randqids[$slotno][$randqname];
+                    }
+                } else {
+                    $step['randqs'] = array();
+                }
+
+                quiz_start_new_attempt($quizobj, $quba, $attempt, $attemptnumber, $timenow, $step['randqs'], $step['variants']);
+                quiz_attempt_save_started($quizobj, $quba, $attempt);
+                $attemptid = $attemptids[$step['quizattempt']] = $attempt->id;
+            } else {
+                $attemptid = $attemptids[$step['quizattempt']];
+            }
+
+            // Process some responses from the student.
+            $attemptobj = quiz_attempt::create($attemptid);
+            $attemptobj->process_submitted_actions($timenow, false, $step['responses']);
+
+            // Finish the attempt.
+            if (!isset($step['finished']) || ($step['finished'] == 1)) {
+                $attemptobj = quiz_attempt::create($attemptid);
+                $attemptobj->process_finish($timenow, false);
+            }
+        }
+        return $attemptids;
+    }
 
     /**
      * Create a quiz add questions to it, walk through quiz attempts and then check results.
@@ -69,7 +219,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
 
         $this->create_quiz($quizsettings, $csvdata['questions']);
 
-        $quizattemptids = $this->walkthrough_attempts($csvdata['steps']);
+        $quizattemptids = $this->my_walkthrough_attempts($csvdata['steps']);
 
         foreach ($csvdata['responses'] as $responsesfromcsv) {
             $responses = $this->explode_dot_separated_keys_to_make_subindexs($responsesfromcsv);
@@ -101,7 +251,6 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                     $data->folders = $folder;
                     $data->questiontext = $questionstext;
                     $data->editorfilename = $editorfilename;
-                    var_dump($data);
 
                     $filenamearchive = $r->invoke($report, $this->quiz, $cm, $course, $user_attempts, $data);
                     echo $filenamearchive;
@@ -191,6 +340,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
             }
             $qa = $quizattempt->get_question_attempt($slot);
             $stepswithsubmit = $qa->get_steps_with_submitted_response_iterator();
+            // var_dump($stepswithsubmit);
             $step = $stepswithsubmit[$responses['submittedstepno']];
             if (null === $step) {
                 throw new \coding_exception("There is no step no {$responses['submittedstepno']} ".
