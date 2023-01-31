@@ -165,7 +165,8 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                     }
                 }
 
-                $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
+                $usercontext = \context_user::instance($user->id);
+                $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', /* $usercontext*/ $quizobj->get_context());
                 $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
 
                 $prevattempts = quiz_get_user_attempts($this->quiz->id, $user->id, 'all', true);
@@ -187,10 +188,13 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
 
                 quiz_start_new_attempt($quizobj, $quba, $attempt, $attemptnumber, $timenow, $step['randqs'], $step['variants']);
                 quiz_attempt_save_started($quizobj, $quba, $attempt);
+                // \question_engine::save_questions_usage_by_activity($quba);
                 $attemptid = $attemptids[$step['quizattempt']] = $attempt->id;
             } else {
                 $attemptid = $attemptids[$step['quizattempt']];
             }
+
+
 
             // Process some responses from the student.
             $attemptobj = quiz_attempt::create($attemptid);
