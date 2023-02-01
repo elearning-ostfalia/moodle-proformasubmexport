@@ -48,6 +48,68 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/report.php');
 class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_walkthrough_from_csv_test {
     const delete_tmp_archives = true;
 
+    protected $slots = null;
+
+    /**
+     * @param $filenamearchive
+     * @param $csvdata
+     * @param string $editorfilename
+     * @param \stdClass $data
+     * @param $i
+     */
+    protected function checkZipContent($filenamearchive, $csvdata, string $editorfilename, \stdClass $data): void
+    {
+        $archive = new \ZipArchive();
+        $archive->open($filenamearchive);
+        $countMatches = 0; // count number of matching files.
+        $countSteps = 0;
+
+        foreach ($csvdata['steps'] as $stepsfromcsv) {
+            $steps = $this->explode_dot_separated_keys_to_make_subindexs($stepsfromcsv);
+
+            foreach ($steps['responses'] as $index => $answer) {
+
+                switch ($this->slots[$index]->options->responseformat) {
+                    case 'editor':
+                        if ('noeditor' != $editorfilename) {
+                            $countSteps++;
+                            if (!$this->find_answer($steps, $index, $answer, $archive, $data)) {
+                                $countMatches++;
+                            }
+                        }
+                        break;
+                    case 'filepicker':
+                    case 'explorer':
+                        $countSteps++;
+                        break;
+                    default:
+                        throw new \coding_exception('invalid proforma subtype ' . $this->slots[$index]->options->responseformat);
+                }
+
+                if ($this->find_answer($steps, $index, $answer, $archive, $data)) {
+                    $countMatches++;
+                }
+            }
+        }
+
+        $this->assertEquals($countSteps, $countMatches);
+        // Note: Two attempts come from qtype_proforma - Test helper
+        $this->assertTrue($archive->numFiles >= $countMatches);
+
+        for ($i = 0; $i < $archive->numFiles; $i++) {
+            $filename = $archive->getNameIndex($i);
+            $filecontent = $archive->getFromName($filename);
+            // Dump first file name and content.
+            var_dump($filename);
+            var_dump($filecontent);
+            break;
+        }
+
+        if (self::delete_tmp_archives) {
+            unlink($filenamearchive);
+        }
+    }
+
     protected function get_full_path_of_csv_file($setname, $test) {
         // Overridden here so that __DIR__ points to the path of this file.
         return  __DIR__."/fixtures/{$setname}{$test}.csv";
@@ -76,7 +138,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
         $filerecord->filepath = '/';
         $filerecord->filename = $filename;
 
-        print_r($filerecord);
+        // print_r($filerecord);
         $fs->create_file_from_string($filerecord, $contents);
     }
 
@@ -145,18 +207,18 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                 if ($quizobj->has_questions()) {
                     $quizobj->load_questions();
                 }
-                $slots = [];
+                $this->slots = [];
                 foreach ($quizobj->get_questions() as $question) {
-                    $slots[$question->slot] = $question;
+                    $this->slots[$question->slot] = $question;
                 }
 
                 // TODO: convert filepicker date in $step array to match proforma format
                 $usercontext = \context_user::instance($user->id);
                 foreach ($step['responses'] as $slot => &$response) { // slot or question??
-                    $type = $slots[$slot]->qtype;
+                    $type = $this->slots[$slot]->qtype;
                     if ($type == 'proforma') {
                         // Check for filepicker and explorer
-                        switch ($slots[$slot]->options->responseformat) {
+                        switch ($this->slots[$slot]->options->responseformat) {
                             case 'editor':
                                 break;
                             case 'filepicker':
@@ -168,7 +230,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                                 unset($response['answer']);
                                 break;
                             default:
-                                throw new \coding_exception('invalid proforma subtype ' . $slots[$slot]->options->responseformat);
+                                throw new \coding_exception('invalid proforma subtype ' . $this->slots[$slot]->options->responseformat);
                         }
                     }
                 }
@@ -263,45 +325,14 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                     $data->folders = $folder;
                     $data->questiontext = $questionstext;
                     $data->editorfilename = $editorfilename;
+                    print_r($data);
 
+                    // Create zip.
                     $filenamearchive = $r->invoke($report, $this->quiz, $cm, $course, $user_attempts, $data);
                     echo $filenamearchive;
 
-                    $archive = new \ZipArchive();
-                    $archive->open($filenamearchive);
-                    $countMatches = 0; // count number of matching files.
-                    $countSteps = 0;
-
-                    foreach ($csvdata['steps'] as $stepsfromcsv) {
-                        $steps = $this->explode_dot_separated_keys_to_make_subindexs($stepsfromcsv);
-
-                        foreach ($steps['responses'] as $index => $answer) {
-                            if ('noeditor' != $editorfilename) {
-                                $countSteps++;
-                            }
-
-                            if ($this->find_answer($steps, $index, $answer, $archive, $data)) {
-                                $countMatches++;
-                            }
-                        }
-                    }
-
-                    $this->assertEquals($countSteps, $countMatches);
-                    // Note: Two attempts come from qtype_proforma - Test helper
-                    $this->assertTrue($archive->numFiles >= $countMatches);
-
-                    for( $i = 0; $i < $archive->numFiles; $i++ ) {
-                        $filename = $archive->getNameIndex($i);
-                        $filecontent = $archive->getFromName($filename);
-                        // Dump first file name and content.
-                        var_dump($filename);
-                        var_dump($filecontent);
-                        break;
-                    }
-
-                    if (self::delete_tmp_archives) {
-                        unlink($filenamearchive);
-                    }
+                    // Check zip content.
+                    $this->checkZipContent($filenamearchive, $csvdata, $editorfilename, $data);
                 }
             }
         }
