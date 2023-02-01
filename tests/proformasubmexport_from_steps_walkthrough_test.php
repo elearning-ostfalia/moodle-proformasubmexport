@@ -75,13 +75,15 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
         $filerecord->itemid = $draftitemid;
         $filerecord->filepath = '/';
         $filerecord->filename = $filename;
+
+        print_r($filerecord);
         $fs->create_file_from_string($filerecord, $contents);
     }
 
 
-    protected function upload_file($user, $attachementsdraftid, $response, $filename = 'MyString.java') {
+    protected function upload_file($context, $attachementsdraftid, $response, $filename = 'MyString.java') {
         // global $USER;
-        $usercontextid = \context_user::instance($user->id)->id;
+        // $usercontextid = \context_user::instance($user->id)->id;
         // we need to get the draft item ids.
         // $this->render();
 /*        if (!preg_match('/env=filemanager&amp;action=browse&amp;.*?itemid=(\d+)&amp;/', $this->currentoutput, $matches)) {
@@ -90,7 +92,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
         $attachementsdraftid = $matches[1];*/
 
         // save to draft area
-        $this->save_file_to_draft_area($usercontextid, $attachementsdraftid, $filename, $response);
+        $this->save_file_to_draft_area($context->id, $attachementsdraftid, $filename, $response);
 
         // update storage for uploaded files
         $this->uploadedfiles[$attachementsdraftid] = array(
@@ -133,6 +135,10 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                 $user = $this->getDataGenerator()->create_user($username);
             }
 
+            global $USER;
+            // Change user.
+            $USER = $user;
+
             if (!isset($attemptids[$step['quizattempt']])) {
                 // Start the attempt.
                 $quizobj = \quiz::create($this->quiz->id, $user->id);
@@ -145,6 +151,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                 }
 
                 // TODO: convert filepicker date in $step array to match proforma format
+                $usercontext = \context_user::instance($user->id);
                 foreach ($step['responses'] as $slot => &$response) { // slot or question??
                     $type = $slots[$slot]->qtype;
                     if ($type == 'proforma') {
@@ -156,7 +163,8 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                             case 'explorer':
                                 $attachementsdraftid = file_get_unused_draft_itemid();
 
-                                $response['attachments'] = $this->upload_file($user, $attachementsdraftid, $response['answer']);
+                                $response['attachments'] = $this->upload_file($usercontext
+                                    /*$quizobj->get_context()*/, $attachementsdraftid, $response['answer']);
                                 unset($response['answer']);
                                 break;
                             default:
@@ -165,7 +173,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                     }
                 }
 
-                $usercontext = \context_user::instance($user->id);
+
                 $quba = \question_engine::make_questions_usage_by_activity('mod_quiz', /* $usercontext*/ $quizobj->get_context());
                 $quba->set_preferred_behaviour($quizobj->get_quiz()->preferredbehaviour);
 
