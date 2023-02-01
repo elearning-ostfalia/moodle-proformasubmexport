@@ -46,7 +46,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/report.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_walkthrough_from_csv_test {
-    const delete_tmp_archives = true;
+    const delete_tmp_archives = false;
 
     protected $slots = null;
 
@@ -116,7 +116,6 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
     }
 
     protected $files = array('questions', 'steps', 'responses');
-    protected $uploadedfiles = array();
 
     /**
      * Helper method: Store a test file with a given name and contents in a
@@ -142,30 +141,9 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
         $fs->create_file_from_string($filerecord, $contents);
     }
 
-
     protected function upload_file($context, $attachementsdraftid, $response, $filename = 'MyString.java') {
-        // global $USER;
-        // $usercontextid = \context_user::instance($user->id)->id;
-        // we need to get the draft item ids.
-        // $this->render();
-/*        if (!preg_match('/env=filemanager&amp;action=browse&amp;.*?itemid=(\d+)&amp;/', $this->currentoutput, $matches)) {
-            throw new \coding_exception('File manager draft item id not found.');
-        }
-        $attachementsdraftid = $matches[1];*/
-
         // save to draft area
         $this->save_file_to_draft_area($context->id, $attachementsdraftid, $filename, $response);
-
-        // update storage for uploaded files
-        $this->uploadedfiles[$attachementsdraftid] = array(
-            'filename' => $filename,
-            'content' => $response);
-
-        //$this->last_attachments = $this->current_attachments;
-        //$this->current_attachments = $response;
-
-        // $this->is_graded = false;
-
         return $attachementsdraftid;
     }
 
@@ -174,16 +152,6 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
      * @return array attempt no as in csv file => the id of the quiz_attempt as stored in the db.
      */
     protected function my_walkthrough_attempts($steps) {
-        global $DB;
-        $course = $DB->get_record('course', array('id' => $this->quiz->course), '*', MUST_EXIST);
-
-/*        $cm = new \stdClass();
-        $cm->id = 0;
-        $quiz = new \quiz($this->quiz, $cm, $course);
-        if ($quiz->has_questions()) {
-            $quiz->load_questions();
-        }
-*/
         global $DB;
         $attemptids = array();
         foreach ($steps as $steprow) {
