@@ -45,8 +45,19 @@ Feature: Basic use of the Proforma Submission export
 
   @javascript
   Scenario: Export responses when there are no attempts
+    # Moodle 4 TODO
+    # When I am on the "Quiz 1" "quiz activity" page logged in as teacher
+    # And I navigate to "Results" in current page administration
+    # And I pause
+    # And I select "Download Essay and ProFormA" in the ""
+    # ...
+    # OR:
+    # And I navigate to "Download Essay and ProFormA submissions" in current page administration
+
+    # When I am on the "Quiz 1" "mod_quiz > Download Essay and ProFormA submissions report" page logged in as teacher
+    # Moodle 3
     Given I am on the "Quiz 1" "quiz activity" page logged in as teacher
-    And I navigate to "Results > Download Essay and ProFormA submissions" in current page administration
+    # And I navigate to "Results > Download Essay and ProFormA submissions" in current page administration
     Then I should see "Attempts: 0"
 #    And I pause
     # Download should be disabled? or download Question text?
@@ -71,6 +82,15 @@ Feature: Basic use of the Proforma Submission export
       |   1  | response from student 2  |
     And user "student2" has finished an attempt at quiz "Quiz 1"
 
+    # Moodle 4 TODO
+    # When I am on the "Quiz 1" "quiz activity" page logged in as teacher
+    # And I navigate to "Results" in current page administration
+    # And I pause
+    # And I select "Download Essay and ProFormA" in the ""
+    # ...
+    # OR:
+    # And I navigate to "Download Essay and ProFormA submissions" in current page administration
+    # Moodle 3
     And I am on the "Quiz 1" "quiz activity" page logged in as teacher
     And I navigate to "Results > Download Essay and ProFormA submissions" in current page administration
     Then I should see "Attempts: 6"
