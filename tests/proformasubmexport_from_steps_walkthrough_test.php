@@ -46,9 +46,11 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/report.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_walkthrough_from_csv_test {
-    const delete_tmp_archives = true;
+    const delete_tmp_archives = false;
 
     protected $slots = null;
+
+    protected $files = array('questions', 'steps', 'responses');
 
     /**
      * @param $filenamearchive
@@ -116,7 +118,6 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
         return  __DIR__."/fixtures/{$setname}{$test}.csv";
     }
 
-    protected $files = array('questions', 'steps', 'responses');
 
     /**
      * Helper method: Store a test file with a given name and contents in a
@@ -177,26 +178,29 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                     $this->slots[$question->slot] = $question;
                 }
 
-                // TODO: convert filepicker date in $step array to match proforma format
                 $usercontext = \context_user::instance($user->id);
                 foreach ($step['responses'] as $slot => &$response) { // slot or question??
                     $type = $this->slots[$slot]->qtype;
-                    if ($type == 'proforma') {
-                        // Check for filepicker and explorer
-                        switch ($this->slots[$slot]->options->responseformat) {
-                            case 'editor':
-                                break;
-                            case 'filepicker':
-                            case 'explorer':
-                                $attachementsdraftid = file_get_unused_draft_itemid();
-
-                                $response['attachments'] = $this->upload_file($usercontext
-                                    /*$quizobj->get_context()*/, $attachementsdraftid, $response['answer']);
-                                unset($response['answer']);
-                                break;
-                            default:
-                                throw new \coding_exception('invalid proforma subtype ' . $this->slots[$slot]->options->responseformat);
-                        }
+                    switch ($type) {
+                        case 'proforma':
+                            // Check for filepicker and explorer
+                            switch ($this->slots[$slot]->options->responseformat) {
+                                case 'editor':
+                                    break;
+                                case 'filepicker':
+                                case 'explorer':
+                                    $attachementsdraftid = file_get_unused_draft_itemid();
+                                    $response['attachments'] = $this->upload_file($usercontext
+                                        /*$quizobj->get_context()*/, $attachementsdraftid, $response['answer']);
+                                    unset($response['answer']);
+                                    break;
+                                default:
+                                    throw new \coding_exception('invalid proforma subtype ' . $this->slots[$slot]->options->responseformat);
+                            }
+                            break;
+                        case 'essay':
+                            $response['answerformat'] = FORMAT_PLAIN;
+                            break;
                     }
                 }
 
