@@ -88,9 +88,8 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
 
                 if ($this->find_answer($steps, $index, $answer, $archive, $data)) {
                     $countMatches++;
+                    $this->assertEquals($data->questiontext, $this->find_questiontext($steps, $index, $answer, $archive, $data, $this->slots[$index]));
                 }
-
-                $this->assertEquals($data->questiontext, $this->find_questiontext($steps, $index, $answer, $archive, $data, $this->slots[$index]));
             }
         }
 
@@ -360,7 +359,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
             // filename found => check content.
             // var_dump($filename);
             $filecontent = $archive->getFromName($filename);
-            var_dump($filecontent);
+            // var_dump($filecontent);
             $this->assertEquals($questionobj->questiontext, $filecontent);
             return true;
 
