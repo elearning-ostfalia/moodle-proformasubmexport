@@ -46,7 +46,7 @@ require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/report.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_walkthrough_from_csv_test {
-    const delete_tmp_archives = false;
+    const delete_tmp_archives = true;
 
     protected $slots = null;
 
@@ -89,6 +89,8 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
                 if ($this->find_answer($steps, $index, $answer, $archive, $data)) {
                     $countMatches++;
                 }
+
+                $this->assertEquals($data->questiontext, $this->find_questiontext($steps, $index, $answer, $archive, $data, $this->slots[$index]));
             }
         }
 
@@ -121,16 +123,16 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
      * Helper method: Store a test file with a given name and contents in a
      * draft file area.
      *
-     * @param int $usercontextid user context id.
+     * @param int $context context.
      * @param int $draftitemid draft item id.
-     * @param string $filename filename.
      * @param string $contents file contents.
+     * @param string $filename filename.
      */
-    private function save_file_to_draft_area($usercontextid, $draftitemid, $filename, $contents) {
+    protected function upload_file($context, $draftitemid, $contents, $filename = 'MyString.java') {
         $fs = get_file_storage();
 
         $filerecord = new \stdClass();
-        $filerecord->contextid = $usercontextid;
+        $filerecord->contextid = $context->id;
         $filerecord->component = 'user';
         $filerecord->filearea = 'draft';
         $filerecord->itemid = $draftitemid;
@@ -139,13 +141,9 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
 
         // print_r($filerecord);
         $fs->create_file_from_string($filerecord, $contents);
+        return $draftitemid;
     }
 
-    protected function upload_file($context, $attachementsdraftid, $response, $filename = 'MyString.java') {
-        // save to draft area
-        $this->save_file_to_draft_area($context->id, $attachementsdraftid, $filename, $response);
-        return $attachementsdraftid;
-    }
 
     /**
      * @param $steps array the step data from the csv file.
@@ -327,6 +325,43 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\attempt_w
             $filecontent = $archive->getFromName($filename);
             // var_dump($filecontent);
             $this->assertEquals($filecontent, $content);
+            return true;
+
+            // $stat = $archive->statIndex( $i );
+            // print_r( basename( $stat['name'] ) . PHP_EOL );
+        }
+
+        return false;
+    }
+
+    protected function find_questiontext($steps, $questionindex, $answer, $archive, $data, $questionobj) {
+        $question = 'Q' . $questionindex;
+        // var_dump($question);
+        $path = $steps['firstname'] . ' ' . $steps['lastname'] . ' - Attempt1';
+        // var_dump($path);
+//              $path = 'username' . ' - ' . $steps['firstname'] . ' ' . $steps['lastname'] . ' - Attempt';
+        $content = $answer['answer'];
+
+        for( $i = 0; $i < $archive->numFiles; $i++ ) {
+            $filename = $archive->getNameIndex($i);
+            if (strpos($filename, 'questiontext.txt') === false) {
+                continue;
+            }
+
+            if (strpos($filename, $question) === false) {
+                continue;
+            }
+
+            // Attempt path is only in filepath if folders are attemptwise
+            if ((strpos($filename, $path) > 0) != ($data->folders == 'attemptwise')) {
+                continue;
+            }
+
+            // filename found => check content.
+            // var_dump($filename);
+            $filecontent = $archive->getFromName($filename);
+            var_dump($filecontent);
+            $this->assertEquals($questionobj->questiontext, $filecontent);
             return true;
 
             // $stat = $archive->statIndex( $i );
