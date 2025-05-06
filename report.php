@@ -27,7 +27,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
+// require_once($CFG->dirroot . '/mod/quiz/report/attemptsreport.php');
 require_once($CFG->dirroot . '/mod/quiz/report/proformasubmexport/proformasubmexport_form.php');
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 
@@ -40,7 +40,7 @@ require_once($CFG->libdir . '/filestorage/zip_archive.php');
  * @copyright 1999 onwards Martin Dougiamas and others {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class quiz_proformasubmexport_report extends quiz_attempts_report {
+class quiz_proformasubmexport_report extends mod_quiz\local\reports\attempts_report {
 
 	public function display($quiz, $cm, $course) {
         global $OUTPUT, $DB;
