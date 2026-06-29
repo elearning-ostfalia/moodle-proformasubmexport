@@ -31,7 +31,18 @@ use Behat\Mink\Exception\ExpectationException as ExpectationException;
 
 class behat_proformasubmexport extends behat_mod_quiz {
 
-    /**
+    protected function resolve_page_instance_url(string $type, string $identifier): moodle_url {
+        switch (strtolower($type)) {
+            case 'download essay and proforma submissions':
+                return new moodle_url('/mod/quiz/report.php',
+                    ['id' => $this->get_cm_by_quiz_name($identifier)->id, 'mode' => 'proformasubmexport']);
+
+        }
+        return parent::resolve_page_instance_url($type, $identifier);
+    }
+
+
+        /**
      * Attempt a quiz.
      *
      * The first row should be column names:

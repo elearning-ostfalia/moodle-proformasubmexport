@@ -19,8 +19,10 @@ namespace quiz_responses;
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_quiz\quiz_attempt;
+use mod_quiz\quiz_settings;
 use question_bank ;
-use quiz_attempt;
+use question_engine;
 
 define('UNITTEST_IS_RUNNING', true);
 
@@ -157,7 +159,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\tests\att
             $step = $this->explode_dot_separated_keys_to_make_subindexs($steprow);
             // Find existing user or make a new user to do the quiz.
             $username = array('firstname' => $step['firstname'],
-                'lastname'  => $step['lastname']);
+                    'lastname'  => $step['lastname']);
 
             if (!$user = $DB->get_record('user', $username)) {
                 $user = $this->getDataGenerator()->create_user($username);
@@ -191,7 +193,7 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\tests\att
                                 case 'explorer':
                                     $attachementsdraftid = file_get_unused_draft_itemid();
                                     $response['attachments'] = $this->upload_file($usercontext
-                                        /*$quizobj->get_context()*/, $attachementsdraftid, $response['answer']);
+                                            /*$quizobj->get_context()*/, $attachementsdraftid, $response['answer']);
                                     unset($response['answer']);
                                     break;
                                 default:
@@ -246,6 +248,11 @@ class proformasubmexport_from_steps_walkthrough_test extends \mod_quiz\tests\att
             }
         }
         return $attemptids;
+    }
+
+    #[\Override]
+    protected static function get_test_files(): array {
+        return ['questions', 'steps', 'responses'];
     }
 
     /**
